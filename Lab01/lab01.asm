@@ -1,4 +1,4 @@
-ORG OH
+ORG 0h
 
 mov R0, #20h; //R0 = A[start]
 mov R1, #28h; //B = B[start]
