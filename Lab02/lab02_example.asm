@@ -29,6 +29,7 @@ LEGACY_PAGE  equ  00h
 ;P1.7 pressed,
 MAIN:
 		mov A, P1
+        mov R3, #00000001b
 		jz MAIN
 
         jb P1.7, Loop_R
@@ -40,17 +41,21 @@ MAIN:
 		jb P1.4, Loop_even
 
 Loop_R:
-    mov P2, A
+    mov P2, R3
     LCALL Delay
+    mov A, R3
     rr A
+    mov R3, A
     mov A, P1
     jnz MAIN
     LJMP Loop_R
 
 Loop_L:
-    mov P2, A
+    mov P2, R3
     LCALL Delay
+    mov A, R3
     RL A
+    mov R3, A
     mov A, P1
     jnz MAIN
     LJMP Loop_L
@@ -59,17 +64,19 @@ Loop_odd:
     mov P2, #10101010b
     LCALL Delay
     mov P2, #00000000b
+    LCALL Delay
     mov A, P1
     jnz MAIN
-    LJMP Loop_L
+    LJMP Loop_odd
 
 Loop_even:
     mov P2, #01010101b
     LCALL Delay
     mov P2, #00000000b
+    LCALL Delay
     mov A, P1
     jnz MAIN
-    LJMP Loop_L
+    LJMP Loop_even
 
 Delay: MOV R0, #50
 Delay0: MOV R1, #40
