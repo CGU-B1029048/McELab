@@ -23,11 +23,23 @@ LEGACY_PAGE  equ  00h
     mov SFRPAGE, #LEGACY_PAGE
 
     ;detect button and display
-Loop_Begin:
     mov P1, #0
     mov A , P1
     rr  A
     mov P2, A
-    sjmp Loop_Begin
-
+MAIN:
+    MOV A, #00000001B
+    MOV PSW, #00H
+Loop:
+    MOV P0, A
+    LCALL Delay
+    RR A
+    LJMP Loop
+Delay: MOV R0, #50
+Delay0: MOV R1, #40
+Delay1: MOV R2, #249
+Delay2: DJNZ R2, Delay2
+        DJNZ R1, Delay1
+        DJNZ R0, Delay0
+        RET
 END
