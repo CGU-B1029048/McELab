@@ -22,19 +22,28 @@ LEGACY_PAGE  equ  00h
     mov P2MDOUT, #0ffh
     mov SFRPAGE, #LEGACY_PAGE
 
-    ;detect button and display
+    ;resert 0 for P1 and P2
     mov P1, #0
-    mov A , P1
-    rr  A
-    mov P2, A
+    mov P2, #0
+;P1.6 pressed P2 rotate left 1s pulse
 MAIN:
-    MOV A, #00000001B
-    MOV PSW, #00H
-Loop:
-    MOV P0, A
+    mov A, P1.7
+    JNZ Loop_L
+    mov A, P1.6
+    JNZ Loop_R
+    
+    mov A, P1
+    JZ MAIN
+Loop_L:
+    MOV P2, A
+    LCALL Delay
+    RL A
+    LJMP Loop_L
+Loop_R:
+    MOV P2, A
     LCALL Delay
     RR A
-    LJMP Loop
+    LJMP Loop_R
 Delay: MOV R0, #50
 Delay0: MOV R1, #40
 Delay1: MOV R2, #249
@@ -42,4 +51,5 @@ Delay2: DJNZ R2, Delay2
         DJNZ R1, Delay1
         DJNZ R0, Delay0
         RET
+
 END
