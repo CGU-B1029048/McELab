@@ -100,11 +100,11 @@ Timer0_ISR:
 		;jb     B.5, Loop_odd
 
 		;jb     B.4, Loop_even
-        mov     A, R0
-        mov     B, R1
 
 reset_timer:
 		mov		TL0, #0
 		mov		TH0, #0
+        mov     A, R0
+        mov     B, R1
 		reti
 		ends
