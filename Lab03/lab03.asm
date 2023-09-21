@@ -27,23 +27,24 @@ LEGACY_PAGE		equ		00h
 
 		org		0100h
 main:
-		lcall	Port_Config
-		lcall	Timer_Config
-        mov     P1, #0
-        mov     P2, #0
+    lcall	Port_Config
+    lcall	Timer_Config
+    mov     P1, #0              ;init P1,P2 = 0
+    mov     P2, #0
 loop:	
-		mov	    A, P1
-        jnz     store
-        mov     P2, R3
-		sjmp	loop
+    mov	    A, P1
+    jnz     store               ;if P1 pressed, store val in store flag
+    mov     P2, R3              ;store LED into P2
+    sjmp	loop
 store: ;Store status of button P1 when P1 not zero
-        mov    R2, P1
-        jnb    R2.7, Loop_RL_init
-        jnb    R2.6, Loop_RL_init
-        sjmp   loop
+    mov     R2, A
+    mov     B, R2
+    jb      B.7, Loop_RL_init
+    jb      B.6, Loop_RL_init
+    sjmp    loop
 Loop_RL_init:
-        mov    R3, #00000001b
-        sjmp   loop
+    mov    R3, #00000001b
+    sjmp   loop
 
 Loop_R:
     mov A, R3
@@ -80,13 +81,14 @@ Timer_Config:
 		ret
 
 Timer0_ISR:
-        jb R2.7, Loop_R
+        mov     B, R2
+        jb      B.7, Loop_R
 
-		jb R2.6, Loop_L
+		jb      B.6, Loop_L
 
-		;jb R2.5, Loop_odd
+		;jb     B.5, Loop_odd
 
-		;jb R2.4, Loop_even
+		;jb     B.4, Loop_even
 reset_timer:
 		mov		TL0, #0
 		mov		TH0, #0
