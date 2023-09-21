@@ -37,13 +37,13 @@ loop:
     mov     P2, R3              ;store LED into P2
     sjmp	loop
 store: ;Store status of button P1 when P1 not zero
-    mov     R2, A
+    mov     R2, A               ;Store status to A
     mov     B, R2
-    jb      B.7, Loop_RL_init
+    jb      B.7, Loop_RL_init   ;init R or L loop
     jb      B.6, Loop_RL_init
     sjmp    loop
 Loop_RL_init:
-    mov    R3, #00000001b
+    mov    R3, #00000001b       ;init LED for R/L loop
     sjmp   loop
 
 
@@ -77,34 +77,32 @@ Timer_Config:
 
 
 
-Loop_R:
-    mov A, R3
-    rr A
-    mov R3, A
-    ljmp reset_timer
+Loop_R: ;Right shift loop
+    mov     A, R3
+    rr      A
+    mov     R3, A
+    ljmp    reset_timer
 
-Loop_L:
-    mov A, R3
-    rl A
-    mov R3, A
-    ljmp reset_timer
+Loop_L: ;Left Shift loop
+    mov     A, R3
+    rl      A
+    mov     R3, A
+    ljmp    reset_timer
 
 Timer0_ISR:
-        mov     R0, A
+        mov     R0, A           ;stash store val in Reg 
         mov     R1, B
         mov     B, R2
-        jb      B.7, Loop_R
 
+        jb      B.7, Loop_R     ;jump control
 		jb      B.6, Loop_L
-
-		;jb     B.5, Loop_odd
-
-		;jb     B.4, Loop_even
+		jb      B.5, Loop_odd
+		jb      B.4, Loop_even
 
 reset_timer:
 		mov		TL0, #0
 		mov		TH0, #0
-        mov     A, R0
+        mov     A, R0           ;restore stash
         mov     B, R1
 		reti
 		ends
