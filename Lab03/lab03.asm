@@ -123,4 +123,4 @@ reset_timer:
         mov     A, R0           ;restore stash
         mov     B, R1
 		reti
-		ends
+		end
