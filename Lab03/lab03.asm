@@ -31,6 +31,7 @@ main:
     lcall	Timer_Config
     mov     P1, #0              ;init P1,P2 = 0
     mov     P2, #0
+    mov     R4, #4
 loop:	
     mov	    A, P1
     jnz     store               ;if P1 pressed, store val in store flag
@@ -44,9 +45,6 @@ store: ;Store status of button P1 when P1 not zero
     sjmp    loop
 Loop_RL_init:
     mov    R3, #00000001b       ;init LED for R/L loop
-    sjmp   loop
-Loop_odd_even_init:
-    mov    R3, #0b              ;init LED for odd/even
     sjmp   loop
 
 
@@ -108,6 +106,8 @@ Loop_odd_even_nz:
     sjmp    reset_timer    
 
 Timer0_ISR:
+        DJNZ    R4, reset_timer
+        mov     R4, #4
         mov     R0, A           ;stash store val in Reg 
         mov     R1, B
         mov     B, R2
