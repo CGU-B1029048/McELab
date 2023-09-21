@@ -46,17 +46,10 @@ Loop_RL_init:
     mov    R3, #00000001b
     sjmp   loop
 
-Loop_R:
-    mov A, R3
-    rr A
-    mov R3, A
-    ljmp reset_timer
 
-Loop_L:
-    mov A, R3
-    rl A
-    mov R3, A
-    ljmp reset_timer
+
+
+
 
 Port_Config:
 		;turn-off the watch-dog timer
@@ -80,7 +73,25 @@ Timer_Config:
 		mov		TH0, #0
 		ret
 
+
+
+
+
+Loop_R:
+    mov A, R3
+    rr A
+    mov R3, A
+    ljmp reset_timer
+
+Loop_L:
+    mov A, R3
+    rl A
+    mov R3, A
+    ljmp reset_timer
+
 Timer0_ISR:
+        mov     R0, A
+        mov     R1, B
         mov     B, R2
         jb      B.7, Loop_R
 
@@ -89,16 +100,11 @@ Timer0_ISR:
 		;jb     B.5, Loop_odd
 
 		;jb     B.4, Loop_even
+        mov     A, R0
+        mov     B, R1
+
 reset_timer:
 		mov		TL0, #0
 		mov		TH0, #0
 		reti
-		end
-
-
-
-
-
-
-
-
+		ends
