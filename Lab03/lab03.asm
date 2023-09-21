@@ -45,7 +45,9 @@ store: ;Store status of button P1 when P1 not zero
 Loop_RL_init:
     mov    R3, #00000001b       ;init LED for R/L loop
     sjmp   loop
-
+Loop_odd_even_init:
+    mov    R3, #0b              ;init LED for odd/even
+    sjmp   loop
 
 
 
@@ -88,6 +90,22 @@ Loop_L: ;Left Shift loop
     rl      A
     mov     R3, A
     ljmp    reset_timer
+
+Loop_odd:
+    mov     A, R3
+    jnz     Loop_odd_even_nz
+    mov     R3, #10101010b
+    sjmp    reset_timer
+
+Loop_even:
+    mov     A, R3
+    jnz     Loop_odd_even_nz
+    mov     R3, #01010101b
+    sjmp    reset_timer
+
+Loop_odd_even_nz:
+    mov     R3, #0
+    sjmp    reset_timer    
 
 Timer0_ISR:
         mov     R0, A           ;stash store val in Reg 
