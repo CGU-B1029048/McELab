@@ -1,7 +1,5 @@
 # Microcontroller Experiment Lab01 Report
-#### menu
 - [Microcontroller Experiment Lab01 Report](#microcontroller-experiment-lab01-report)
-      - [menu](#menu)
   - [Problem Description](#problem-description)
     - [Goal of Lab01](#goal-of-lab01)
     - [Detail Description](#detail-description)
