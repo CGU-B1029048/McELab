@@ -3,6 +3,7 @@
 ### Report
 *.pdf
 *.html
+*.zip
 
 ### C ###
 # Prerequisites
