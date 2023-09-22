@@ -8,8 +8,13 @@
   - [Disscussion](#disscussion)
 ## Problem Description
 ### Goal of Lab02
-+
-
++ To learn how a program affects hardware signals
++ To send/receive signals from an application processor to external devices through I/O pads
++ Design your own LED box
+  + initial all LED off
+  + The LED run certain pattern after some button pressed
+  + At least 4 different patterns
+  + you can design your own pattern
 ### Detail Description
 
 <div style="break-after: page; page-break-after: always;"></div>
