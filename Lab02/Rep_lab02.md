@@ -242,8 +242,15 @@ for (i = 50; i > 0; i--) {
   }
 }
 ```
-<div style="break-after: page; page-break-after: always;"></div>
 
 ## Difficulties Encountered and Solutions
+At first we have trouble at understanding how to set to P1, P2, ports, and also have no idea where to start. After we asked teacher, we realize that the given code has already setup all the defination for P1, P2 and watchdog timer, and understand how ports I/O was done in assembly. We also see the `Config_Page` and `Legacy_Page`, we thought that it was the page in the manual, so we have no idea what it does and why it's here. Why save the page in manual into the code? After asking teacher, we realize that the page is a concept in memory, not the page we understand in real life.
+Later we faced another problem, we've no idea how to make the condition jump for each button pressed. After long thinking and trying, and experiment with the example code several time, we've done it by jump at `MAIN`, and by using the bit-addressable register `P1` with `jb` instruction, we successfully made the conditional jump.
+But then we occured our final problem, how to get the loop back to `MAIN` after button was pressed to proceed conditional jump? We then thought that by detect if `P1` is zero in the loop every loop cycle, so we'll jump back after `P1` is changed. However, the code still dies. After debugging, we find is that our register `A` was used by our LED shifting and also `jb` branch, so the value in both will conflict causing error. We resolved by store LED status in `R3`, so everytime `A` was used, it'll pull value to `A` and store back so `A` won't conflict together.
+
+<div style="break-after: page; page-break-after: always;"></div>
 
 ## Disscussion
+After this Lab, I've understand more about how I/O work in computer, and how we done it in assembly code. Using code to setup our flow, and knowing how to setup the config for the ports, I/O. And successful to let our board the blink LED's as we want.
+Also, I've learned more about the way to write assembly, as some register is been specify and required additional step to make it work. Such as `A`, we must use other register to store our value to revent confrontation between our code. Conditional jump also understand more, as this code require to use `jb`. With the use of bit-addressable register, I've realized more about the advantage and disadvantage of assembly with 8051 board.
+Hope our next lab is successful too.
