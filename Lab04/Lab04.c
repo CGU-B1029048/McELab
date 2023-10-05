@@ -3,6 +3,7 @@ sbit patten01 = P1^7;
 sbit patten02 = P1^6;
 int but;
 int status;
+int mode;
 
 
 //set port address
@@ -11,25 +12,6 @@ void port_Configuration (){
 	P1MDIN = 0xff;
 	P2MDOUT = 0xff;
 }//end of function Port_Configuration
-
-void default_Config (){
-	//turn-off watch-dog timer
-	// disable watchdog timer
-	WDTCN = 0xde;
-	WDTCN = 0xad;
-	
-	OSCICN = 0x83;
-	CLKSEL = 0x00;
-
-	Timer_Configuration ()
-	//initialize SFR setup page
-	SFRPAGE = CONFIG_PAGE;                 // Switch to configuration page
-
-	port_Configuration ();
-
-	//set to normal mode
-	SFRPAGE = LEGACY_PAGE;
-}//end of function Default_Config
 
 void Timer_Configuration (){
 	TMOD = 0x01;
@@ -40,6 +22,25 @@ void Timer_Configuration (){
 	TL0 = 0;
 	TH0 = 0;
 }//end of function Timer_Configuration
+
+void default_Config (){
+	//turn-off watch-dog timer
+	// disable watchdog timer
+	WDTCN = 0xde;
+	WDTCN = 0xad;
+	
+	OSCICN = 0x83;
+	CLKSEL = 0x00;
+	//initialize SFR setup page
+	SFRPAGE = CONFIG_PAGE;                 // Switch to configuration page
+
+	port_Configuration ();
+	Timer_Configuration ();
+	//set to normal mode
+	SFRPAGE = LEGACY_PAGE;
+}//end of function Default_Config
+
+
 /****************
 There are something wrong with the function below!
 Please see the following hints:
@@ -82,7 +83,6 @@ void mode_change(){
 }//end of function main
 
 int main(){
-	int mode = 0;
 	status = 1;
 	P2 = 0;
 	while(1){
