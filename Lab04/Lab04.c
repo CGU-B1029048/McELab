@@ -15,7 +15,11 @@ void default_Config (){
 	// disable watchdog timer
 	WDTCN = 0xde;
 	WDTCN = 0xad;
+	
+	OSCICN = 0x83;
+	CLKSEL = 0x00;
 
+	Timer_Configuration ()
 	//initialize SFR setup page
 	SFRPAGE = CONFIG_PAGE;                 // Switch to configuration page
 
@@ -25,7 +29,15 @@ void default_Config (){
 	SFRPAGE = LEGACY_PAGE;
 }//end of function Default_Config
 
+void Timer_Configuration (){
+	TMOD = 0x01;
+	TCON = 0x10;
+	CKCON = 0x10;
 
+	IE = 0x82;
+	TL0 = 0;
+	TH0 = 0;
+}//end of function Timer_Configuration
 /****************
 There are something wrong with the function below!
 Please see the following hints:
@@ -60,12 +72,30 @@ void button_detect (){
 		}
 	}//Stage 2: wait for key released
 }//end of function button_detect ()
+void Timer0_ISR() {
+	count++;
+
+	if(count == 4)count = 0;
+}
 
 void mode_change(){
 	default_Config ();
 
 	button_detect ();
 }//end of function main
+
+void Timer0_ISR () interrupt 1
+{
+	count++;
+
+	if (count==4) {
+		count = 0;
+		if (status==0) status=0x80;
+	}
+
+	TH0 = 0;
+	TL0 = 0;
+}//end of function Timer0_ISR
 
 int main(){
 	int status;
