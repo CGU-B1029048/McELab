@@ -2,6 +2,8 @@
 sbit patten01 = P1^7;
 sbit patten02 = P1^6;
 int but;
+int status;
+
 
 //set port address
 void port_Configuration (){
@@ -72,11 +74,6 @@ void button_detect (){
 		}
 	}//Stage 2: wait for key released
 }//end of function button_detect ()
-void Timer0_ISR() {
-	count++;
-
-	if(count == 4)count = 0;
-}
 
 void mode_change(){
 	default_Config ();
@@ -84,21 +81,7 @@ void mode_change(){
 	button_detect ();
 }//end of function main
 
-void Timer0_ISR () interrupt 1
-{
-	count++;
-
-	if (count==4) {
-		count = 0;
-		if (status==0) status=0x80;
-	}
-
-	TH0 = 0;
-	TL0 = 0;
-}//end of function Timer0_ISR
-
 int main(){
-	int status;
 	int mode = 0;
 	status = 1;
 	P2 = 0;
@@ -112,7 +95,10 @@ int main(){
 			else mode++;
 			continue;
 		}
+	}
+}
 
+void Timer0_ISR () interrupt 1{
 		P2 = status;
 	
 		if (mode == 0) {
@@ -142,5 +128,7 @@ int main(){
 			if (status) status = 0;
 			else status = 170;
 		}
-	}
-}
+
+	TH0 = 0;
+	TL0 = 0;
+}//end of function Timer0_ISR
