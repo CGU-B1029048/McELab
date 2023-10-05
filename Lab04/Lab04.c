@@ -1,7 +1,6 @@
 #include "C8051F040.h"
 sbit patten01 = P1^7;
 sbit patten02 = P1^6;
-bool mode;
 int mode;
 
 //set port address
@@ -72,26 +71,26 @@ int main(){
 	int status;
 	status = 1;
 	P2 = 0;
-
-	mode_change();
-	P2 = status;
+	while(1){
+		mode_change();
+		P2 = status;
 	
-	if (mode == 1) {
-		if (P2 == 128){
-			status = 1;
-		} else {
-			status = status << 1;
-		}
-		P2 = status;
-	}//end while (patten01)
+		if (mode == 0) {
+			if (P2 == 128){
+				status = 1;
+			} else {
+				status = status << 1;
+			}
+			P2 = status;
+		}//end while (patten01)
 
-	if (mode == 2) {
-		if (P2 == 0){
-			status = 1;
-		} else {
-			status = status >> 1;
-		}
-		P2 = status;
-	}//end while (patten01)
-	return status;
+		if (mode == 1) {
+			if (P2 == 1){
+				status = 128;
+			} else {
+				status = status >> 1;
+			}
+			P2 = status;
+		}//end while (patten01)
+	}
 }
