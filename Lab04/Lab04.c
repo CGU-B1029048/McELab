@@ -1,7 +1,6 @@
 #include "C8051F040.h"
 sbit patten01 = P1^7;
 sbit patten02 = P1^6;
-int but;
 int status;
 int mode;
 
@@ -58,11 +57,6 @@ void button_detect (){
 	} while (!key_hold);
 
 	//Stage 2: wait for key released
-	if (patten01) {
-		but = 0;
-	} else {
-		but = 1;
-	}
 	key_release = 0;
 	count = 1000;
 	while (!key_release) {
@@ -76,25 +70,17 @@ void button_detect (){
 	}//Stage 2: wait for key released
 }//end of function button_detect ()
 
-void mode_change(){
-	default_Config ();
-
-	button_detect ();
-}//end of function main
-
 int main(){
+	default_Config ();
 	status = 1;
 	P2 = 0;
 	while(1){
-		mode_change();
-		if (but) {
-			if (mode == 3) {
-				mode = 0;
-				status = 1;
-			}
-			else mode++;
-			continue;
+		button_detect ();
+		if (mode == 3) {
+			mode = 0;
+			status = 1;
 		}
+		else mode++;
 	}
 }
 
