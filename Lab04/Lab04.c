@@ -1,7 +1,7 @@
 #include "C8051F040.h"
 sbit patten01 = P1^7;
 sbit patten02 = P1^6;
-int mode;
+int but;
 
 //set port address
 void port_Configuration (){
@@ -44,9 +44,9 @@ void button_detect (){
 
 	//Stage 2: wait for key released
 	if (patten01) {
-		mode = 0;
+		but = 0;
 	} else {
-		mode = 1;
+		but = 1;
 	}
 	key_release = 0;
 	count = 1000;
@@ -69,10 +69,17 @@ void mode_change(){
 
 int main(){
 	int status;
+	int mode = 0;
 	status = 1;
 	P2 = 0;
 	while(1){
 		mode_change();
+		if (but) {
+			if (mode == 3) mode = 0;
+			else mode++;
+			continue;
+		}
+
 		P2 = status;
 	
 		if (mode == 0) {
@@ -92,5 +99,15 @@ int main(){
 			}
 			P2 = status;
 		}//end while (patten01)
+
+		if (mode == 2) {
+			if (status) status = 0;
+			else status = 0b01010101;
+		}
+
+		if (mode == 3) {
+			if (status) status = 0;
+			else status = 0b10101010;
+		}
 	}
 }
