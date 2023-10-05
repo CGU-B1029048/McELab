@@ -75,7 +75,10 @@ int main(){
 	while(1){
 		mode_change();
 		if (but) {
-			if (mode == 3) mode = 0;
+			if (mode == 3) {
+				mode = 0;
+				status = 1;
+			}
 			else mode++;
 			continue;
 		}
@@ -102,12 +105,12 @@ int main(){
 
 		if (mode == 2) {
 			if (status) status = 0;
-			else status = 0b01010101;
+			else status = 85;
 		}
 
 		if (mode == 3) {
 			if (status) status = 0;
-			else status = 0b10101010;
+			else status = 170;
 		}
 	}
 }
