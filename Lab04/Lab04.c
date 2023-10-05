@@ -85,35 +85,35 @@ int main(){
 }
 
 void Timer0_ISR () interrupt 1{
+	P2 = status;
+
+	if (mode == 0) {
+		if (P2 == 128){
+			status = 1;
+		} else {
+			status = status << 1;
+		}
 		P2 = status;
-	
-		if (mode == 0) {
-			if (P2 == 128){
-				status = 1;
-			} else {
-				status = status << 1;
-			}
-			P2 = status;
-		}//end while (patten01)
+	}//end while (patten01)
 
-		if (mode == 1) {
-			if (P2 == 1){
-				status = 128;
-			} else {
-				status = status >> 1;
-			}
-			P2 = status;
-		}//end while (patten01)
-
-		if (mode == 2) {
-			if (status) status = 0;
-			else status = 85;
+	if (mode == 1) {
+		if (P2 == 1){
+			status = 128;
+		} else {
+			status = status >> 1;
 		}
+		P2 = status;
+	}//end while (patten01)
 
-		if (mode == 3) {
-			if (status) status = 0;
-			else status = 170;
-		}
+	if (mode == 2) {
+		if (status) status = 0;
+		else status = 85;
+	}
+
+	if (mode == 3) {
+		if (status) status = 0;
+		else status = 170;
+	}
 
 	TH0 = 0;
 	TL0 = 0;
