@@ -13,13 +13,13 @@ void port_Configuration (){
 }//end of function Port_Configuration
 
 void Timer_Configuration (){
-	TMOD = 0x01;
-	TCON = 0x10;
-	CKCON = 0x10;
+	TMOD = 0x89;
+	TCON = 0x88;
+	CKCON = 0x8e;
 
-	IE = 0x82;
-	TL0 = 0;
-	TH0 = 0;
+	IE = 0xa8;
+	TL0 = 0x8a;
+	TH0 = 0x8c;
 }//end of function Timer_Configuration
 
 void default_Config (){
