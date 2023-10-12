@@ -1,8 +1,8 @@
 #include "C8051F040.h"
 sbit patten01 = P1^7;
-sbit patten02 = P1^6;
 int status;
 int mode;
+int time_count;
 
 
 //set port address
@@ -53,14 +53,14 @@ void button_detect (){
 	int count;
 
 	do {
-		key_hold = patten01 || patten02;
+		key_hold = patten01;
 	} while (!key_hold);
 
 	//Stage 2: wait for key released
 	key_release = 0;
 	count = 1000;
 	while (!key_release) {
-		key_hold = patten01 || patten02;
+		key_hold = patten01;
 		if (key_hold) {
 			count = 50;
 		} else {
@@ -72,10 +72,12 @@ void button_detect (){
 
 int main(){
 	default_Config ();
+	mode = 0;
 	status = 1;
-	P2 = 0;
+	P2 = 1;
 	while(1){
 		button_detect ();
+		P2 = status;
 		if (mode == 3) {
 			mode = 0;
 			status = 1;
@@ -85,36 +87,39 @@ int main(){
 }
 
 void Timer0_ISR () interrupt 1{
+	time_count++;
+
+	if (time_count==4) {
+		time_count = 0;
+		if (mode == 0) {
+			if (P2 == 128){
+				status = 1;
+			} else {
+				status = status << 1;
+			}
+		//	P2 = status;
+		}//end while (patten01)
+
+		if (mode == 1) {
+			if (P2 == 1){
+				status = 128;
+			} else {
+				status = status >> 1;
+			}
+		//	P2 = status;
+		}//end while (patten01)
+
+		if (mode == 2) {
+			if (status) status = 0;
+			else status = 85;
+		}
+
+		if (mode == 3) {
+			if (status) status = 0;
+			else status = 170;
+		}
+	}
 	P2 = status;
-
-	if (mode == 0) {
-		if (P2 == 128){
-			status = 1;
-		} else {
-			status = status << 1;
-		}
-		P2 = status;
-	}//end while (patten01)
-
-	if (mode == 1) {
-		if (P2 == 1){
-			status = 128;
-		} else {
-			status = status >> 1;
-		}
-		P2 = status;
-	}//end while (patten01)
-
-	if (mode == 2) {
-		if (status) status = 0;
-		else status = 85;
-	}
-
-	if (mode == 3) {
-		if (status) status = 0;
-		else status = 170;
-	}
-
 	TH0 = 0;
 	TL0 = 0;
 }//end of function Timer0_ISR
