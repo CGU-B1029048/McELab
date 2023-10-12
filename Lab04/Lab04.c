@@ -1,25 +1,27 @@
 #include "C8051F040.h"
-sbit patten01 = P1^7;
+//button1.7
+sbit pattern = P1^7;
+//global valuable
 int status;
 int mode;
 int time_count;
 
 
 //set port address
-void port_Configuration (){
+void Port_Configuration (){
 	XBR2 = 0xc0;
 	P1MDIN = 0xff;
 	P2MDOUT = 0xff;
 }//end of function Port_Configuration
 
 void Timer_Configuration (){
-	TMOD = 0x89;
-	TCON = 0x88;
-	CKCON = 0x8e;
+	TMOD = 0x01;
+	TCON = 0x10;
+	CKCON = 0x10;
 
-	IE = 0xa8;
-	TL0 = 0x8a;
-	TH0 = 0x8c;
+	IE = 0x82;
+	TL0 = 0;
+	TH0 = 0;
 }//end of function Timer_Configuration
 
 void default_Config (){
@@ -27,16 +29,16 @@ void default_Config (){
 	// disable watchdog timer
 	WDTCN = 0xde;
 	WDTCN = 0xad;
-	
+
 	OSCICN = 0x83;
 	CLKSEL = 0x00;
 	//initialize SFR setup page
 	SFRPAGE = CONFIG_PAGE;                 // Switch to configuration page
 
-	port_Configuration ();
-	Timer_Configuration ();
+	Port_Configuration ();
 	//set to normal mode
 	SFRPAGE = LEGACY_PAGE;
+	Timer_Configuration ();
 }//end of function Default_Config
 
 
@@ -53,14 +55,14 @@ void button_detect (){
 	int count;
 
 	do {
-		key_hold = patten01;
+		key_hold = pattern;
 	} while (!key_hold);
 
 	//Stage 2: wait for key released
 	key_release = 0;
-	count = 1000;
+	count = 50;
 	while (!key_release) {
-		key_hold = patten01;
+		key_hold = pattern;
 		if (key_hold) {
 			count = 50;
 		} else {
@@ -77,7 +79,7 @@ int main(){
 	P2 = 1;
 	while(1){
 		button_detect ();
-		P2 = status;
+		//P2 = status;
 		if (mode == 3) {
 			mode = 0;
 			status = 1;
@@ -91,6 +93,7 @@ void Timer0_ISR () interrupt 1{
 
 	if (time_count==4) {
 		time_count = 0;
+
 		if (mode == 0) {
 			if (P2 == 128){
 				status = 1;
