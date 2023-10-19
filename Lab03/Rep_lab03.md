@@ -1,114 +1,104 @@
 # Microcontroller Experiment Lab03 Report
 - [Microcontroller Experiment Lab03 Report](#microcontroller-experiment-lab03-report)
   - [Problem Description](#problem-description)
-    - [Goal of Lab03](#goal-of-lab03)
-    - [Detail Description](#detail-description)
   - [Code \& Explanation](#code--explanation)
   - [Difficulties Encountered and Solutions](#difficulties-encountered-and-solutions)
   - [Disscussion](#disscussion)
 ## Problem Description
-### Goal of Lab03
-+
-
-### Detail Description
++ Program 8051 to show some LED patterns like last week
++ But control using a timer and interrupt mechanism
++ Pattern
+  * Right shift
+  * Left shift
+  * Blink odd LED
+  * Blink even LED
 
 <div style="break-after: page; page-break-after: always;"></div>
 
 ## Code & Explanation
-```asm
-;define control registers (w/ addr)
-XBR2     equ  0e3h
-P1MDIN   equ  0adh
-P2MDOUT  equ  0a6h
-WDTCN    equ  0ffh
-SFRPAGE  equ  084h
-P1       equ  090h
-P2       equ  0a0h
+```arm
+;define control registers (with address)
+XBR2		equ		0e3h
+P1MDIN		equ		0adh
+P2MDOUT		equ		0a6h
+WDTCN		equ		0ffh
+SFRPAGE		equ		084h
+P1			equ		090h
+P2			equ		0a0h
+
+;define control registers for timer control
+TMOD		equ		089h
+TCON		equ		088h
+CKCON		equ		08eh
+IE			equ		0a8h
+TL0			equ		08ah
+TH0			equ		08ch
 
 ;define control words
-CONFIG_PAGE  equ  0fh
-LEGACY_PAGE  equ  00h
+CONFIG_PAGE		equ		0fh
+LEGACY_PAGE		equ		00h
 
-    ;turn-off watch-dog timer
-    mov  WDTCN, #0deh
-    mov  WDTCN, #0adh
+		org		0h
+		ljmp	main
 
-    ;setup port config
-    mov SFRPAGE, #CONFIG_PAGE
-    mov XBR2   , #0c0h
-    mov P1MDIN , #0ffh
-    mov P2MDOUT, #0ffh
-    mov SFRPAGE, #LEGACY_PAGE
+		org		0bh
+		ljmp	Timer0_ISR
 
-		;detect and set button, restart P1 and P2
-		mov P1, #0
-		mov P2, #0
+		org		0100h
 
-;P1.7 pressed,
-MAIN:
-		mov A, P1
-        mov R3, #00000001b
-		jz MAIN
+Port_Config:
+		;turn-off the watch-dog timer
+		mov		WDTCN, #0deh
+		mov		WDTCN, #0adh
 
-        jb P1.7, Loop_R
+		;setup port configuration
+		mov		SFRPAGE, #CONFIG_PAGE
+		mov		XBR2, #0c0h
+		mov		P1MDIN, #0ffh
+		mov		P2MDOUT, #0ffh
+		mov		SFRPAGE, #LEGACY_PAGE
+		ret
 
-		jb P1.6, Loop_L
-
-		jb P1.5, Loop_odd
-
-		jb P1.4, Loop_even
-
-Loop_R:
-    mov P2, R3
-    LCALL Delay
-    mov A, R3
-    rr A
-    mov R3, A
-    mov A, P1
-    jnz MAIN
-    LJMP Loop_R
-
-Loop_L:
-    mov P2, R3
-    LCALL Delay
-    mov A, R3
-    RL A
-    mov R3, A
-    mov A, P1
-    jnz MAIN
-    LJMP Loop_L
-
-Loop_odd:
-    mov P2, #10101010b
-    LCALL Delay
-    mov P2, #00000000b
-    LCALL Delay
-    mov A, P1
-    jnz MAIN
-    LJMP Loop_odd
-
-Loop_even:
-    mov P2, #01010101b
-    LCALL Delay
-    mov P2, #00000000b
-    LCALL Delay
-    mov A, P1
-    jnz MAIN
-    LJMP Loop_even
-
-Delay: MOV R0, #50
-Delay0: MOV R1, #40
-Delay1: MOV R2, #249
-Delay2: DJNZ R2, Delay2
-        DJNZ R1, Delay1
-        DJNZ R0, Delay0
-        RET
-END
-
+Timer_Config:
+		mov		TMOD, #01h
+		mov		TCON, #010h
+		mov		CKCON, #010h
+		mov		IE, #082h
+		mov		TL0, #0
+		mov		TH0, #0
+		ret
 ```
+Define the pin, control words and register, Timer and Port configuration.
+```arm
+main:
+    lcall	Port_Config
+    lcall	Timer_Config
+    mov     P1, #0              ;init P1,P2 = 0
+    mov     P2, #0
+    mov     R4, #4              ;loop time delay for ISR
+loop:	
+    mov	    A, P1
+    jnz     store               ;if P1 pressed, store val in store flag
+    mov     P2, R3              ;store LED into P2
+    sjmp	loop
+store: ;Store status of button P1 when P1 not zero
+    mov     R2, A               ;Store status to A
+    mov     B, R2
+    jb      B.7, Loop_RL_init   ;init R or L loop
+    jb      B.6, Loop_RL_init
+    sjmp    loop
+Loop_RL_init:
+    mov    R3, #00000001b       ;init LED for R/L loop
+    sjmp   loop
+```
+We first setup the config, init P1,P2 and setup the delay of interrupt, which will run the code in ISR every 4 time of interrupt.
 [](.png)
 <div style="break-after: page; page-break-after: always;"></div>
 
 ## Difficulties Encountered and Solutions
-
+Before our code at Lab02 is written using the `delay` function loop, so when we use it to make our Lab03, we encountered some problem. Since we're using interrupt at Lab03, so we cannot use `delay` at each loop of `Loop_R`, `Loop_L`, etc. Instead, we have to change it to make it fit the mode of interrupt, thus doing one thing at an interrupt cycle only. After a long time trying, we finally finished by making blink odd/even by detect the state of LED first, then decide to blink or turn off light.
+But Later we encountered another problem, our code still failed, and we suffer so long but still cannot find the problem. After asking the teacher, we found that is because our code in interrupt didn't store our data in registers first, thus when interrupt happened while a loop is still runing, the data used in the loop will be overwritten and lost. So we store the data in advance at the begining of the ISR, problem solved.
 ## Disscussion
+
+button_stat = (2*(2*(2*(P3^5) + P3^4) + P3^3) +P3^2)
+0100 = 4
