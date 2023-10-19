@@ -188,16 +188,31 @@ void main (){
 				LCD_SendData ('A');
 				array[i] = 'A';
 				i++;
+				cur_x++;
+				if (cur_x > 15) {
+					cur_x--;
+					LCD_SendCommand(0x10);
+				}
 			// Insert B
 			} else if(P2 == 64){
 				LCD_SendData ('B');
 				array[i] = 'B';
 				i++;
+				cur_x;
+				if (cur_x > 15) {
+					cur_x--;
+					LCD_SendCommand(0x10);
+				}
 			// Insert C
 			} else if(P2 == 32){
 				LCD_SendData ('C');
 				array[i] = 'C';
 				i++;
+				cur_x;
+				if (cur_x > 15) {
+					cur_x--;
+					LCD_SendCommand(0x10);
+				}
 			// New Line
 			} else if(P2 == 16){
 				LCD_ClearScreen ();
