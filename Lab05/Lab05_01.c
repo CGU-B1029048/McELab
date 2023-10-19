@@ -8,9 +8,11 @@
 #include "LCD.h"
 
 char LCD_status;
-char array[16];
+char array[2][16];
 int i = 0;
 int j = 0;
+int cur_x = 0, cur_y = 0;
+int k = 0;
 
 void button_detect (){
 	char key_hold;
@@ -175,23 +177,28 @@ void main (){
 	LCD_ClearScreen ();
 	P1 = 0xff;
 	for (j = 0; j < 16; j++){
-		array[j] = ' ';
+		array[0][j] = ' ';
+		array[1][j] = ' ';
 	}
 	while (1){
 		P2 = 0x00;
-		if( i < 16){
+		if(i < 16){
+			// Insert A
 			if(P2 == 128) {
 				LCD_SendData ('A');
 				array[i] = 'A';
 				i++;
+			// Insert B
 			} else if(P2 == 64){
 				LCD_SendData ('B');
 				array[i] = 'B';
 				i++;
+			// Insert C
 			} else if(P2 == 32){
 				LCD_SendData ('C');
 				array[i] = 'C';
 				i++;
+			// New Line
 			} else if(P2 == 16){
 				LCD_ClearScreen ();
 				//LCD_PrintString (array);
@@ -200,6 +207,18 @@ void main (){
 				}
 				LCD_SendCommand(0x00C0);
 				i = 0;
+			// cursor right
+			} else if (P2 == 8) {
+				if (cur_x < 15) {
+					LCD_SendCommand(0x0014);
+					cur_x++;
+				}
+			// cursor left
+			} else if (P2 == 4) {
+				if (cur_x > 0) {
+					LCD_SendCommand(0x0010);
+					cur_x--;
+				}
 			}
 		} else {
 			if(P2 == 16){

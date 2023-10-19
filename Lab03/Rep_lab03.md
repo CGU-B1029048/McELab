@@ -91,7 +91,7 @@ Loop_RL_init:
     mov    R3, #00000001b       ;init LED for R/L loop
     sjmp   loop
 ```
-We first setup the config, init P1,P2 and setup the delay of interrupt, which will run the code in ISR every 4 time of interrupt.
+We first setup the config, init P1,P2 and setup the delay of interrupt, which will run the code in ISR every 4 time of interrupt. We use P1 as the button, so we use `loop` to detect if button is pressed, if so, we goto `store` to store the button status, i.e. which button is pressed.
 [](.png)
 <div style="break-after: page; page-break-after: always;"></div>
 
@@ -100,5 +100,3 @@ Before our code at Lab02 is written using the `delay` function loop, so when we 
 But Later we encountered another problem, our code still failed, and we suffer so long but still cannot find the problem. After asking the teacher, we found that is because our code in interrupt didn't store our data in registers first, thus when interrupt happened while a loop is still runing, the data used in the loop will be overwritten and lost. So we store the data in advance at the begining of the ISR, problem solved.
 ## Disscussion
 
-button_stat = (2*(2*(2*(P3^5) + P3^4) + P3^3) +P3^2)
-0100 = 4
