@@ -5,8 +5,8 @@ char LCD_status;
 char array[16];
 int i = 0;
 int j = 0;
-int cur_x = 0, cur_y = 0;
-int k = 0;
+int cur_x, cur_y;
+int k = 0, a = 0;
 
 void button_detect (){
 	char key_hold;
@@ -170,6 +170,8 @@ void main (){
 	LCD_Init ();
 	LCD_ClearScreen ();
 	P1 = 0xff;
+	cur_x = 0;
+	cur_y = 0;
 	// for (j = 0; j < 16; j++){
 	// 	array[0][j] = ' ';
 	// 	array[1][j] = ' ';
@@ -217,28 +219,36 @@ void main (){
 				LCD_SendCommand(0x00C0);
 				i = 0;
 
-			// cursor right
-			} else if (P2 == 8) {
-				if (cur_x < 15) {
-					LCD_SendCommand(0x0014);
-					cur_x++;
-				}
 			// cursor left
-			} else if (P2 == 4) {
+			} else if (P2 == 8) {
 				if (cur_x > 0) {
 					LCD_SendCommand(0x0010);
 					cur_x--;
 				}
+			// cursor right
+			} else if (P2 == 4) {
+				if (cur_x < 15) {
+					LCD_SendCommand(0x0014);
+					cur_x++;
+				}
 			// cursor up
 			} else if (P2 == 2) {
-				if (cur_y > 0) {
-					LCD_SendCommand(0x02);
-					for (int a = 0; a < cur_x; a++) {
-						LCD_SendCommand(0x10);
+				if (cur_y == 1) {
+					LCD_SendCommand(0x0002);
+					for (a = 0; a < cur_x; a++) {
+						LCD_SendCommand(0x0010);
 					}
-					y--;
+					cur_y--;
 				}
-			}
+			// cursor down
+			} else if (P2 == 0) {
+				if (cur_y < 1) {
+					LCD_SendCommand(0x00C0);
+					for (a = 0; a < cur_x; a++) {
+						LCD_SendCommand(0x0010);
+					}
+					cur_y++;
+				}
 			
 		} else {
 			if(P2 == 16){
