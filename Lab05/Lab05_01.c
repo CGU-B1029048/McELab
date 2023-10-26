@@ -162,6 +162,13 @@ void Shutup_WatchDog (){
 	WDTCN = 0xad;
 }//end of function Shutup_WatchDog
 
+void jump_cursor(int x, int y) {
+	if (y) LCD_SendCommand(0x00C0);
+	else LCD_SendCommand(0x0002);
+	for (a = 0; a < x; a++) {
+		LCD_SendCommand(0x0014);
+	}
+}
 
 void main (){
 	//int i;
@@ -179,7 +186,7 @@ void main (){
 	}
 	while (1){
 		P2 = 0x00;
-		if(i < 16){
+		if(i < 16) {
 			// Insert A
 			if(P2 == 128) {
 				LCD_SendData('A');
@@ -193,40 +200,35 @@ void main (){
 				if (cur_x < 15) {
 					cur_x++;
 				}
-				if (cur_y) LCD_SendCommand(0x00C0);
-				else LCD_SendCommand(0x0002);
-				for (a = 0; a < cur_x; a++) {
-					LCD_SendCommand(0x0014);
-				}
+				jump_cursor(cur_x, cur_y);
 			// Insert B
 			} else if(P2 == 64){
 				LCD_SendData ('B');
-				array[i] = 'B';
-				i++;
-				cur_x++;
-				if (cur_x > 15) {
-					cur_x--;
-					LCD_SendCommand(0x10);
+				for (a = cur_x; a < 15; a++) {
+					k = array[cur_y][a+1];
+					LCD_SendData(k);
+					array[cur_y][a+1] = array[cur_y][cur_x];
+					array[cur_y][cur_x] = k;
 				}
+				array[cur_y][cur_x] = 'B';
+				if (cur_x < 15) {
+					cur_x++;
+				}
+				jump_cursor(cur_x, cur_y);
 			// Insert C
 			} else if(P2 == 32){
 				LCD_SendData ('C');
-				array[i] = 'C';
-				i++;
-				cur_x++;
-				if (cur_x > 15) {
-					cur_x--;
-					LCD_SendCommand(0x10);
+				for (a = cur_x; a < 15; a++) {
+					k = array[cur_y][a+1];
+					LCD_SendData(k);
+					array[cur_y][a+1] = array[cur_y][cur_x];
+					array[cur_y][cur_x] = k;
 				}
-			// New Line
-			} else if(P2 == 16){
-				LCD_ClearScreen ();
-				//LCD_PrintString (array);
-				for (j = 0; j < i ; j++){
-					LCD_SendData (array[j]);
+				array[cur_y][cur_x] = 'C';
+				if (cur_x < 15) {
+					cur_x++;
 				}
-				LCD_SendCommand(0x00C0);
-				i = 0;
+				jump_cursor(cur_x, cur_y);
 
 			// cursor left
 			} else if (P2 == 8) {
@@ -243,36 +245,27 @@ void main (){
 			// cursor up
 			} else if (P2 == 2) {
 				if (cur_y == 1) {
-					LCD_SendCommand(0x0002);
-					for (a = 0; a < cur_x; a++) {
-						LCD_SendCommand(0x0014);
-					}
-					cur_y--;
+					cur_y = 0;
+					jump_cursor(cur_x, cur_y);
 				}
 			// cursor down
 			} else if (P2 == 0) {
 				if (cur_y < 1) {
-					LCD_SendCommand(0x00C0);
-					for (a = 0; a < cur_x; a++) {
-						LCD_SendCommand(0x0014);
-					}
-					cur_y++;
+					cur_y = 1;
+					jump_cursor(cur_x, cur_y);
 				}
-			
-		} else {
-			if(P2 == 16){
-				LCD_ClearScreen ();
-				//LCD_PrintString (array);
-				for (j = 0; j < i ; j++){
-					LCD_SendData (array[j]);
-				}
-				LCD_SendCommand(0x00C0);
-				i = 0;
 			}
+		} else {
+			// if(P2 == 16){
+			// 	LCD_ClearScreen ();
+			// 	//LCD_PrintString (array);
+			// 	for (j = 0; j < i ; j++){
+			// 		LCD_SendData (array[j]);
+			// 	}
+			// 	LCD_SendCommand(0x00C0);
+			// 	i = 0;
+			// }
 		}
 		//LCD_PrintString ("Hello World!!!");
 	}
-
-	while (1);
-
 }
