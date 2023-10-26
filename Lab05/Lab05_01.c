@@ -172,8 +172,8 @@ void insert_data(char c) {
 	LCD_SendData(c);
 	for (a = cur_x; a < 15; a++) {
 		k = array[cur_y][a+1];
-		LCD_SendData(k);
 		array[cur_y][a+1] = array[cur_y][cur_x];
+		LCD_SendData(array[cur_y][a+1]);
 		array[cur_y][cur_x] = k;
 	}
 	array[cur_y][cur_x] = c;
