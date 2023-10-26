@@ -2,11 +2,12 @@
 #include "LCD.h"
 
 char LCD_status;
-char array[16];
+char array[2][16];
 int i = 0;
 int j = 0;
 int cur_x, cur_y;
-int k = 0, a = 0;
+int a = 0;
+char k;
 
 void button_detect (){
 	char key_hold;
@@ -172,22 +173,30 @@ void main (){
 	P1 = 0xff;
 	cur_x = 0;
 	cur_y = 0;
-	// for (j = 0; j < 16; j++){
-	// 	array[0][j] = ' ';
-	// 	array[1][j] = ' ';
-	// }
+	for (j = 0; j < 16; j++){
+		array[0][j] = ' ';
+		array[1][j] = ' ';
+	}
 	while (1){
 		P2 = 0x00;
 		if(i < 16){
 			// Insert A
 			if(P2 == 128) {
-				LCD_SendData ('A');
-				array[i] = 'A';
-				i++;
-				cur_x++;
-				if (cur_x > 15) {
-					cur_x--;
-					LCD_SendCommand(0x10);
+				LCD_SendData('A');
+				for (a = cur_x; a < 15; a++) {
+					k = array[cur_y][a+1];
+					LCD_SendData(k);
+					array[cur_y][a+1] = array[cur_y][cur_x];
+					array[cur_y][cur_x] = k;
+				}
+				array[cur_y][cur_x] = 'A';
+				if (cur_x < 15) {
+					cur_x++;
+				}
+				if (cur_y) LCD_SendCommand(0x00C0);
+				else LCD_SendCommand(0x0002);
+				for (a = 0; a < cur_x; a++) {
+					LCD_SendCommand(0x0014);
 				}
 			// Insert B
 			} else if(P2 == 64){
@@ -236,7 +245,7 @@ void main (){
 				if (cur_y == 1) {
 					LCD_SendCommand(0x0002);
 					for (a = 0; a < cur_x; a++) {
-						LCD_SendCommand(0x0010);
+						LCD_SendCommand(0x0014);
 					}
 					cur_y--;
 				}
@@ -245,7 +254,7 @@ void main (){
 				if (cur_y < 1) {
 					LCD_SendCommand(0x00C0);
 					for (a = 0; a < cur_x; a++) {
-						LCD_SendCommand(0x0010);
+						LCD_SendCommand(0x0014);
 					}
 					cur_y++;
 				}
