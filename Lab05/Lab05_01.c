@@ -1,14 +1,8 @@
-/*******************************************************************************
- *
- * the LCD infrastructure module
- *
- ******************************************************************************/
-
 #include "C8051F040.h"
 #include "LCD.h"
 
 char LCD_status;
-char array[2][16];
+char array[16];
 int i = 0;
 int j = 0;
 int cur_x = 0, cur_y = 0;
@@ -176,10 +170,10 @@ void main (){
 	LCD_Init ();
 	LCD_ClearScreen ();
 	P1 = 0xff;
-	for (j = 0; j < 16; j++){
-		array[0][j] = ' ';
-		array[1][j] = ' ';
-	}
+	// for (j = 0; j < 16; j++){
+	// 	array[0][j] = ' ';
+	// 	array[1][j] = ' ';
+	// }
 	while (1){
 		P2 = 0x00;
 		if(i < 16){
@@ -198,7 +192,7 @@ void main (){
 				LCD_SendData ('B');
 				array[i] = 'B';
 				i++;
-				cur_x;
+				cur_x++;
 				if (cur_x > 15) {
 					cur_x--;
 					LCD_SendCommand(0x10);
@@ -208,7 +202,7 @@ void main (){
 				LCD_SendData ('C');
 				array[i] = 'C';
 				i++;
-				cur_x;
+				cur_x++;
 				if (cur_x > 15) {
 					cur_x--;
 					LCD_SendCommand(0x10);
@@ -222,6 +216,7 @@ void main (){
 				}
 				LCD_SendCommand(0x00C0);
 				i = 0;
+
 			// cursor right
 			} else if (P2 == 8) {
 				if (cur_x < 15) {
@@ -234,7 +229,17 @@ void main (){
 					LCD_SendCommand(0x0010);
 					cur_x--;
 				}
+			// cursor up
+			} else if (P2 == 2) {
+				if (cur_y > 0) {
+					LCD_SendCommand(0x02);
+					for (int a = 0; a < cur_x; a++) {
+						LCD_SendCommand(0x10);
+					}
+					y--;
+				}
 			}
+			
 		} else {
 			if(P2 == 16){
 				LCD_ClearScreen ();
