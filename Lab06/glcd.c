@@ -123,7 +123,10 @@ GLCD_ReadStatus ()
 	char P2_cword;
 	char status;
 
-	P2_cword = P2_CWORD_TEMPLATE;
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
 	P2_cword = P2_cword & (~P2_RS);
 	P2_cword = P2_cword | (P2_RW);
 	status = GLCD_Read (P2_cword);
@@ -138,7 +141,10 @@ GLCD_ReadData ()
 	char P2_cword;
 	char dat;
 
-	P2_cword = P2_CWORD_TEMPLATE;
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
 	P2_cword = P2_cword | (P2_RS);
 	P2_cword = P2_cword | (P2_RW);
 	dat = GLCD_Read (P2_cword);
@@ -204,7 +210,10 @@ Set_Xaddr (char x)
 	char P2_cword, P4_cword;
 
 	///prepare control words
-	P2_cword = P2_CWORD_TEMPLATE;
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
 	P2_cword = P2_cword & (~P2_RS);		//clear RS bit
 	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
 	P4_cword = P4_Set_Xaddr_TMPL;
@@ -222,7 +231,10 @@ Set_Yaddr (char y)
 	char P2_cword, P4_cword;
 
 	///prepare control words
-	P2_cword = P2_CWORD_TEMPLATE;
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
 	P2_cword = P2_cword & (~P2_RS);		//clear RS bit
 	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
 	P4_cword = P4_Set_Yaddr_TMPL;
@@ -240,7 +252,10 @@ Set_DisplayStartLine (char z)
 	char P2_cword, P4_cword;
 
 	///prepare control words
-	P2_cword = P2_CWORD_TEMPLATE;
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
 	P2_cword = P2_cword & (~P2_RS);		//clear RS bit
 	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
 	P4_cword = P4_Set_Zaddr_TMPL;
@@ -257,7 +272,10 @@ Send_Data (char pattern)
 	char P2_cword, P4_cword;
 
 	///prepare control words
-	P2_cword = P2_CWORD_TEMPLATE;
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
 	P2_cword = P2_cword | (P2_RS);		//set RS bit
 	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
 	P4_cword = pattern;
@@ -268,7 +286,7 @@ Send_Data (char pattern)
 }//end of function Send_Data
 
 void
-Set_DisplayOn (int DVD_side)
+Set_DisplayOn (int mode)
 {
 	char P2_cword, P4_cword;
 
@@ -296,7 +314,10 @@ Set_DisplayOff ()
 	char P2_cword, P4_cword;
 
 	///prepare control words
-	P2_cword = P2_CWORD_TEMPLATE;
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
 	P2_cword = P2_cword & (~P2_RS);		//set RS bit
 	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
 	P4_cword = P4_Set_Display_TMPL;
@@ -315,7 +336,7 @@ GLCD_Reset ()
 
 	set_GLCD_WriteMode ();
 
-	P2_cword = P2_CWORD_TEMPLATE;
+	P2_cword = P2_CWORD_TEMPLATE_RIGHT;
 	P4_cword = 0;
 
 	P2_cword = P2_cword | P2_RST;		//set reset bit
