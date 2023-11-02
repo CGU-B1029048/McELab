@@ -7,6 +7,7 @@
 #include "C8051F040.h"
 #include "glcd.h"
 int mode;
+int x_cur;
 /*******************************************************************************
  *
  * functions for configuring the hardware
@@ -36,7 +37,7 @@ system_init_config ()
 
 	//initialize SFR setup page
 	SFRPAGE = CONFIG_PAGE;		// Switch to configuration page
-	P0MDIN = 0xff;	
+	P1MDIN = 0xff;	
 	//setup the cross-bar and configure the I/O ports
 	XBR2 = 0xc0;
 	P2MDOUT = 0xff;
@@ -393,27 +394,37 @@ void draw(int mode, int x_in) //mode 0 right, 1 left
 	}
 }
 
+void display_drawing() {
+	//draw right
+	mode = 0;
+	Set_DisplayOn (mode);
+	draw(mode, x_cur);	
+
+	//draw left
+	mode = 1;
+	Set_DisplayOn (mode);
+	draw(mode, x_cur);	
+}
+
 /*******************************************************************************
  *
  * the main drawing function
  *
  ******************************************************************************/
 
-main ()
-{
+main () {
 	system_init_config ();
 	
 	GLCD_Reset ();
-	
-	//draw right
-	mode = 0;
-	Set_DisplayOn (mode);
-	draw(mode);	
-
-	//draw left
-	mode = 1;
-	Set_DisplayOn (mode);
-	draw(mode);	
-	
-	while (1);
+	x_cur = 0;
+	display_drawing();
+	while (1) {
+		P1 = 0x00;
+		if (P1 == 1) 
+			if (x_cur < 6) x_cur++;
+		if (P1 == 2)
+			if (x_cur > 0) x_cur--;
+		
+		display_drawing();
+	}
 }//end of function main
