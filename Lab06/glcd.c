@@ -6,7 +6,7 @@
 
 #include "C8051F040.h"
 #include "glcd.h"
-
+int mode;
 /*******************************************************************************
  *
  * functions for configuring the hardware
@@ -268,12 +268,17 @@ Send_Data (char pattern)
 }//end of function Send_Data
 
 void
-Set_DisplayOn ()
+Set_DisplayOn (int DVD_side)
 {
 	char P2_cword, P4_cword;
 
 	///prepare control words
-	P2_cword = P2_CWORD_TEMPLATE;
+	//right
+	if (mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	//left
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
 	P2_cword = P2_cword & (~P2_RS);		//set RS bit
 	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
 	P4_cword = P4_Set_Display_TMPL;
@@ -407,10 +412,16 @@ main ()
 	system_init_config ();
 	
 	GLCD_Reset ();
-
-	Set_DisplayOn ();
 	
-	draw();	
+	//draw right
+	mode = 0;
+	Set_DisplayOn (mode);
+	draw(mode);	
+
+	//draw left
+	mode = 1;
+	Set_DisplayOn (mode);
+	draw(mode);	
 	
 	while (1);
 }//end of function main
