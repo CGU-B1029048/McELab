@@ -22,7 +22,8 @@
 #define P2_E		0x10
 #define P2_RST		0x20
 
-#define P2_CWORD_TEMPLATE	0x21
+#define P2_CWORD_TEMPLATE_RIGHT	0x21
+#define P2_CWORD_TEMPLATE_LEFT	0x22
 
 #define P4_Busy				0x80
 #define P4_Status_On		0x20
