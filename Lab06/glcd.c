@@ -366,61 +366,30 @@ const unsigned char DVD[2][32] = {
 };
 
 
-void draw(int mode) //mode 0 right, 1 left
+void draw(int mode, int x_in) //mode 0 right, 1 left
 {
 	int i, x;
 	Set_DisplayStartLine (0);
 	Set_Yaddr (0);
-	x = 0;
-	Set_Xaddr (x);
-	if (mode) { //draw left
-		for (i=16;i<32;i++)
-			Send_Data (DVD[x][i]);
+	for (x = 0; x < 8; x++) {
+		Set_Xaddr(x);
+		if (x == x_in || x == x_in + 1) {
+			if (mode) { //draw left
+				for (i=16;i<32;i++)
+					Send_Data (DVD[x_in - x][i]);
+			}
+			for (i = 16; i < 64; i++)
+				Send_Data (0x00);
+			if (!mode) { //draw right
+				for (i=0;i<16;i++)
+					Send_Data (DVD[x_in - x][i]);
+			}
+		} else {
+			for (i=0;i<64;i++)
+				Send_Data (0x00);
+		}
 	}
-	for (i = 16; i < 64; i++)
-		Send_Data (0x00);
-	if (!mode) { //draw right
-		for (i=0;i<16;i++)
-			Send_Data (DVD[x][i]);
-	}
-
-	Set_Xaddr (++x);
-	if (mode) { //draw left
-		for (i=16;i<32;i++)
-			Send_Data (DVD[x][i]);
-	}
-	for (i = 16; i < 64; i++)
-		Send_Data (0x00);
-	if (!mode) { //draw right
-		for (i=0;i<16;i++)
-			Send_Data (DVD[x][i]);
-	}
-
-	Set_Xaddr (++x);
-	for (i=0;i<64;i++)
-		Send_Data (0x00);
-
-	Set_Xaddr (++x);
-	for (i=0;i<64;i++)
-		Send_Data (0x00);
-
-	Set_Xaddr (++x);
-	for (i=0;i<64;i++)
-		Send_Data (0x00);
-
-	Set_Xaddr (++x);
-	for (i=0;i<64;i++)
-		Send_Data (0x00);
-
-	Set_Xaddr (++x);
-	for (i=0;i<64;i++)
-		Send_Data (0x00);
-
-	Set_Xaddr (++x);
-	for (i=0;i<64;i++)
-		Send_Data (0x00);
 }
-
 
 /*******************************************************************************
  *
