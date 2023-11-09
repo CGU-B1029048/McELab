@@ -368,28 +368,17 @@ void draw(int mode, int x_in) //mode 0 right, 1 left
 
 	for (x = 0; x < 8; x++) {
 		Set_Xaddr (x);
-		if (x == x_in) {
+		if (x == x_in || x == x_cur + 1) {
 			Set_Xaddr (x);
 			if (!mode) { //draw right
 				for (i=16;i<32;i++)
-					Send_Data (DVD[0][i]);
+					Send_Data (DVD[x_in - x][i]);
 			}
 			for (i = 16; i < 64; i++)
 				Send_Data (0x00);
 			if (mode) { //draw left
 				for (i=0;i<16;i++)
-					Send_Data (DVD[0][i]);
-			}
-		} else if (x == x_in + 1) {
-			if (!mode) { //draw right
-				for (i=16;i<32;i++)
-					Send_Data (DVD[1][i]);
-			}
-			for (i = 16; i < 64; i++)
-				Send_Data (0x00);
-			if (mode) { //draw left
-				for (i=0;i<16;i++)
-					Send_Data (DVD[1][i]);
+					Send_Data (DVD[x_in - x][i]);
 			}
 		} else {		
 			for (i=0;i<64;i++)
