@@ -59,3 +59,5 @@ Bonus 2: (+30%)
 - Implement the arrow keys (up, down, left, right)
 - Move the cursor by the arrow key
 - Insert character at the cursor position
+
+### Lab06
