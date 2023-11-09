@@ -1,6 +1,6 @@
 #include "C8051F040.h"
 #include "glcd.h"
-int mode, z_cur;
+int mode, z_cur, y_cur;
 /*******************************************************************************
  *
  * functions for configuring the hardware
@@ -347,7 +347,17 @@ GLCD_Reset ()
 	while (GLCD_IsReset());
 }//end of function GLCD_Reset
 
+void GLCD_Clean() {
+	int i, x;
+	Set_DisplayStartLine (0);
+	Set_Yaddr (0);
 
+	for (x=0; x<8; x++) {
+		Set_Xaddr (x);
+		for (i=0;i<64;i++)
+			Send_Data (0x00);
+	}
+}
 /*******************************************************************************
  *
  * Drawing functions that you implement
@@ -358,26 +368,27 @@ const unsigned char DVD[2][32] = {
 {0x00, 0xF0, 0xFB, 0x3B, 0x83, 0x83, 0x83, 0x83, 0xE7, 0x7F, 0x3F, 0x03, 0x07, 0x7F, 0xF8, 0xC0,
 0xC0, 0x70, 0x1C, 0x0E, 0x07, 0xC3, 0xFB, 0x7B, 0x03, 0x03, 0x83, 0x83, 0xC6, 0x7E, 0x3C, 0x00 },
 {0x00, 0x21, 0x31, 0x71, 0x71, 0x51, 0x50, 0x50, 0x58, 0x58, 0x48, 0x78, 0xC8, 0xC8, 0xCB, 0x89,
-0x88, 0xC8, 0xC8, 0xC8, 0x78, 0x49, 0x59, 0x59, 0x59, 0x51, 0x51, 0x50, 0x70, 0x30, 0x20, 0x20 }
+0x88, 0xC8, 0xC8, 0xC8, 0x78, 0x49, 0x59, 0x59, 0x59, 0x51, 0x51, 0x50, 0x70, 0x30, 0x20, 0x00 }
 };
 
 
-void draw(int mode, int z_in) //mode 0 right, 1 left
+void draw(int mode, int z_in, int y_in) //mode 0 right, 1 left
 {
 	int i, x;
 	Set_DisplayStartLine (z_in);
-	Set_Yaddr (0);
 
 	for (x = 0; x < 2; x++) {
 		Set_Xaddr (x);
-		if (!mode) { //draw right
-			for (i=16;i<32;i++)
+
+		if (mode && y_in < 64) { //draw left
+			Set_Yaddr (y_in);
+			for (i=0;i < ((y_in > 32) ? 64 - y_in : 32);i++)
 				Send_Data (DVD[x][i]);
 		}
-		for (i = 16; i < 64; i++)
-			Send_Data (0x00);
-		if (mode) { //draw left
-			for (i=0;i<16;i++)
+
+		if (!mode && y_in > 32) { //draw right
+			Set_Yaddr((y_in < 64)? 0: y_in-64);
+			for (i = ((y_in > 63) ? 0 : 64 - y_in);i < 32;i++)
 				Send_Data (DVD[x][i]);
 		}
 	}
@@ -395,21 +406,27 @@ main ()
 	system_init_config ();
 	
 	GLCD_Reset ();
+	mode = 0;
+	GLCD_Clean();
+	mode = 1;
+	GLCD_Clean();
+
 	P1 = 0x00;
-	//draw right
 	z_cur = 0;
+	y_cur = 0;
 	while(1){
 		if(P1 == 1) z_cur++;
 		if(P1 == 2) z_cur--;
+		if(P1 == 4 && y_cur < 96) y_cur++;
+		if(P1 == 8 && y_cur >0) y_cur--;
+		//draw right
 		mode = 0;
 		Set_DisplayOn (mode);
-		draw(mode, z_cur);	
+		draw(mode, z_cur, y_cur);	
 
 		//draw left
 		mode = 1;
 		Set_DisplayOn (mode);
-		draw(mode, z_cur);
+		draw(mode, z_cur, y_cur);
 	}
-	
-	while (1);
 }//end of function main
