@@ -417,6 +417,8 @@ main ()
 	while(1){
 		if(P1 == 1) z_cur++;
 		if(P1 == 2) z_cur--;
+		if(P1 == 4 && y_cur < 96) y_cur++;
+		if(P1 == 8 && y_cur > 0)  y_cur--;
 		//draw right
 		mode = 0;
 		Set_DisplayOn (mode);
