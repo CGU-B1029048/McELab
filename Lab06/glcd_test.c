@@ -1,6 +1,6 @@
 #include "C8051F040.h"
 #include "glcd.h"
-int mode, z_cur;
+int mode, z_cur, y_cur;
 /*******************************************************************************
  *
  * functions for configuring the hardware
@@ -35,6 +35,8 @@ system_init_config ()
 	XBR2 = 0xc0;
 	P2MDOUT = 0xff;
 	P0MDOUT = 0xff;
+	//P1 input
+	P1MDOUT = 0xff;
 }//end of function system_init_config
 
 
@@ -360,22 +362,23 @@ const unsigned char DVD[2][32] = {
 };
 
 
-void draw(int mode, int z_in) //mode 0 right, 1 left
+void draw(int mode, int z_in, int y_in) //mode 0 right, 1 left
 {
 	int i, x;
 	Set_DisplayStartLine (z_in);
-	Set_Yaddr (0);
 
 	for (x = 0; x < 2; x++) {
 		Set_Xaddr (x);
-		if (!mode) { //draw right
-			for (i=16;i<32;i++)
+
+		if (mode && y_in < 64) { //draw left
+			Set_Yaddr (y_in);
+			for (i=0;i < ((y_in > 32) ? 64 - y_in : 32);i++)
 				Send_Data (DVD[x][i]);
 		}
-		for (i = 16; i < 64; i++)
-			Send_Data (0x00);
-		if (mode) { //draw left
-			for (i=0;i<16;i++)
+
+		if (!mode && y_in > 32) { //draw right
+			Set_Yaddr(y_in%64);
+			for (i = ((y_in > 63) ? 0 : 64 - y_in);i<32;i++)
 				Send_Data (DVD[x][i]);
 		}
 	}
@@ -393,17 +396,21 @@ main ()
 	system_init_config ();
 	
 	GLCD_Reset ();
-	
-	//draw right
-	z_cur = 0;
-	mode = 0;
-	Set_DisplayOn (mode);
-	draw(mode, z_cur);	
 
-	//draw left
-	mode = 1;
-	Set_DisplayOn (mode);
-	draw(mode, z_cur);	
-	
-	while (1);
+	P1 = 0x00;
+	z_cur = 0;
+	y_cur = 0;
+	while(1){
+		if(P1 == 1) z_cur++;
+		if(P1 == 2) z_cur--;
+		//draw right
+		mode = 0;
+		Set_DisplayOn (mode);
+		draw(mode, z_cur, y_cur);	
+
+		//draw left
+		mode = 1;
+		Set_DisplayOn (mode);
+		draw(mode, z_cur, y_cur);
+	}
 }//end of function main
