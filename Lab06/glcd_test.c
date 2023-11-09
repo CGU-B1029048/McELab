@@ -1,6 +1,6 @@
 #include "C8051F040.h"
 #include "glcd.h"
-int mode, x_cur;
+int mode, z_cur;
 /*******************************************************************************
  *
  * functions for configuring the hardware
@@ -360,29 +360,23 @@ const unsigned char DVD[2][32] = {
 };
 
 
-void draw(int mode, int x_in) //mode 0 right, 1 left
+void draw(int mode, int z_in) //mode 0 right, 1 left
 {
 	int i, x;
-	Set_DisplayStartLine (0);
+	Set_DisplayStartLine (z_in);
 	Set_Yaddr (0);
 
-	for (x = 0; x < 8; x++) {
+	for (x = 0; x < 2; x++) {
 		Set_Xaddr (x);
-		if (x == x_in || x == x_cur + 1) {
-			Set_Xaddr (x);
-			if (!mode) { //draw right
-				for (i=16;i<32;i++)
-					Send_Data (DVD[x_in - x][i]);
-			}
-			for (i = 16; i < 64; i++)
-				Send_Data (0x00);
-			if (mode) { //draw left
-				for (i=0;i<16;i++)
-					Send_Data (DVD[x_in - x][i]);
-			}
-		} else {		
-			for (i=0;i<64;i++)
-				Send_Data (0x00);
+		if (!mode) { //draw right
+			for (i=16;i<32;i++)
+				Send_Data (DVD[x][i]);
+		}
+		for (i = 16; i < 64; i++)
+			Send_Data (0x00);
+		if (mode) { //draw left
+			for (i=0;i<16;i++)
+				Send_Data (DVD[x][i]);
 		}
 	}
 }
@@ -401,15 +395,15 @@ main ()
 	GLCD_Reset ();
 	
 	//draw right
-	x_cur = 0;
+	z_cur = 0;
 	mode = 0;
 	Set_DisplayOn (mode);
-	draw(mode, x_cur);	
+	draw(mode, z_cur);	
 
 	//draw left
 	mode = 1;
 	Set_DisplayOn (mode);
-	draw(mode, x_cur);	
+	draw(mode, z_cur);	
 	
 	while (1);
 }//end of function main
