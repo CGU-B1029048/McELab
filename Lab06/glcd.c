@@ -413,7 +413,7 @@ main ()
 
 	P1 = 0x00;
 	z_cur = 0;
-	y_cur = 0;
+	y_cur = 48;
 	while(1){
 		if(P1 == 1) z_cur++;
 		if(P1 == 2) z_cur--;
