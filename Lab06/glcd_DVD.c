@@ -1,6 +1,8 @@
 #include "C8051F040.h"
 #include "glcd.h"
 int mode, z_cur, y_cur;
+int x_move = 0; //x_move = 0, x++; else x--
+int y_move = 0; //y_move = 0, y++; else y--
 /*******************************************************************************
  *
  * functions for configuring the hardware
@@ -50,7 +52,7 @@ void
 GLCD_delay ()
 {
 	int i;
-	for (i=0;i<10;i++);
+	for (i=0;i<50;i++);
 }//end of function GLCD_delay
 
 void
@@ -395,8 +397,9 @@ void draw(int mode, int z_in, int y_in) //mode 0 right, 1 left
 }
 
 void move_DVD(int x, int y) {
-	z_cur = (x) ? z_cur-- : z_cur++; 
-	y_cur = (y) ? y_cur-- : y_cur++;
+	(x) ? z_cur-- : z_cur++; 
+	(y) ? y_cur-- : y_cur++;
+	GLCD_delay();
 }
 
 /*******************************************************************************
@@ -418,12 +421,10 @@ main ()
 	P1 = 0x00;
 	z_cur = 32;
 	y_cur = 48;
-	int x_move = 0; //x_move = 0, x++; else x--
-	int y_move = 0; //y_move = 0, y++; else y--
 	while(1){
 		
-		if (z_cur == 1 || z_cur == 63) (x_move) ? 0 : 1;
-		if (y_cur == 0 || y_cur == 127) (y_move) ? 0 : 1;
+		if (z_cur == 16 || z_cur == 63) x_move = (x_move) ? 0 : 1;
+		if (y_cur == 0 || y_cur == 97) y_move = (y_move) ? 0 : 1;
 
 		move_DVD(x_move, y_move);
 
