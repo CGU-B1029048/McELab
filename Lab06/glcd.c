@@ -1,13 +1,6 @@
-/*******************************************************************************
- *
- * file: [glcd.c]
- *
- ******************************************************************************/
-
 #include "C8051F040.h"
 #include "glcd.h"
-int mode;
-int x_cur;
+int mode, z_cur;
 /*******************************************************************************
  *
  * functions for configuring the hardware
@@ -37,13 +30,13 @@ system_init_config ()
 
 	//initialize SFR setup page
 	SFRPAGE = CONFIG_PAGE;		// Switch to configuration page
-	P1MDIN = 0xff;	
+
 	//setup the cross-bar and configure the I/O ports
 	XBR2 = 0xc0;
 	P2MDOUT = 0xff;
 	P0MDOUT = 0xff;
-	//set to normal mode
-	SFRPAGE = LEGACY_PAGE;
+	//P1 input
+	P1MDOUT = 0xff;
 }//end of function system_init_config
 
 
@@ -369,42 +362,27 @@ const unsigned char DVD[2][32] = {
 };
 
 
-void draw(int mode, int x_in) //mode 0 right, 1 left
+void draw(int mode, int z_in) //mode 0 right, 1 left
 {
 	int i, x;
-	Set_DisplayStartLine (0);
+	Set_DisplayStartLine (z_in);
 	Set_Yaddr (0);
-	for (x = 0; x < 8; x++) {
-		Set_Xaddr(x);
-		if (x == x_in || x == x_in + 1) {
-			if (mode) { //draw left
-				for (i=16;i<32;i++)
-					Send_Data (DVD[x_in - x][i]);
-			}
-			for (i = 16; i < 64; i++)
-				Send_Data (0x00);
-			if (!mode) { //draw right
-				for (i=0;i<16;i++)
-					Send_Data (DVD[x_in - x][i]);
-			}
-		} else {
-			for (i=0;i<64;i++)
-				Send_Data (0x00);
+
+	for (x = 0; x < 2; x++) {
+		Set_Xaddr (x);
+		if (!mode) { //draw right
+			for (i=16;i<32;i++)
+				Send_Data (DVD[x][i]);
+		}
+		for (i = 16; i < 64; i++)
+			Send_Data (0x00);
+		if (mode) { //draw left
+			for (i=0;i<16;i++)
+				Send_Data (DVD[x][i]);
 		}
 	}
 }
 
-void display_drawing() {
-	//draw right
-	mode = 0;
-	Set_DisplayOn (mode);
-	draw(mode, x_cur);	
-
-	//draw left
-	mode = 1;
-	Set_DisplayOn (mode);
-	draw(mode, x_cur);	
-}
 
 /*******************************************************************************
  *
@@ -412,19 +390,26 @@ void display_drawing() {
  *
  ******************************************************************************/
 
-main () {
+main ()
+{
 	system_init_config ();
 	
 	GLCD_Reset ();
-	x_cur = 0;
-	display_drawing();
-	while (1) {
-		P1 = 0x00;
-		if (P1 == 1) 
-			if (x_cur < 6) x_cur++;
-		if (P1 == 2)
-			if (x_cur > 0) x_cur--;
-		
-		display_drawing();
+	P1 = 0x00;
+	//draw right
+	z_cur = 0;
+	while(1){
+		if(P1 == 1) z_cur++;
+		if(P1 == 2) z_cur--;
+		mode = 0;
+		Set_DisplayOn (mode);
+		draw(mode, z_cur);	
+
+		//draw left
+		mode = 1;
+		Set_DisplayOn (mode);
+		draw(mode, z_cur);
 	}
+	
+	while (1);
 }//end of function main
