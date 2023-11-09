@@ -347,7 +347,17 @@ GLCD_Reset ()
 	while (GLCD_IsReset());
 }//end of function GLCD_Reset
 
+void GLCD_Clean() {
+	int i, x;
+	Set_DisplayStartLine (0);
+	Set_Yaddr (0);
 
+	for (x=0; x<8; x++) {
+		Set_Xaddr (x);
+		for (i=0;i<64;i++)
+			Send_Data (0x00);
+	}
+}
 /*******************************************************************************
  *
  * Drawing functions that you implement
@@ -396,6 +406,10 @@ main ()
 	system_init_config ();
 	
 	GLCD_Reset ();
+	mode = 0;
+	GLCD_Clean();
+	mode = 1;
+	GLCD_Clean();
 
 	P1 = 0x00;
 	z_cur = 0;
