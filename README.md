@@ -45,4 +45,17 @@ right shift
 + Hint: use the timer interrupt to make two I/O devices work simultaneously
 
 ### Lab05
-Write sss
+Display characters on LCD according to the button pressed
+
+Basic: (40%)
+- Display the character pressed at the cursor position
+
+Bonus 1: (+30%)
+- Implement the `new-line’ key
+- Change to the next line if a new-line button is pressed at Line 1
+- Scroll the screen if a new-line button is pressed at Line 2
+
+Bonus 2: (+30%)
+- Implement the arrow keys (up, down, left, right)
+- Move the cursor by the arrow key
+- Insert character at the cursor position
