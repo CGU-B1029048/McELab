@@ -11,7 +11,6 @@ char LCD_status;
 char array[16];
 int i = 0;
 int j = 0;
-int k = 0;
 
 void button_detect (){
 	char key_hold;
@@ -169,15 +168,18 @@ void Shutup_WatchDog (){
 
 void main (){
 	//int i;
-	//P1 = 0x00;
+	P1 = 0x00;
 	Shutup_WatchDog ();
 	LCD_PortConfig ();
 	LCD_Init ();
 	LCD_ClearScreen ();
-	//P1 = 0xff;
+	P1 = 0xff;
+	for (j = 0; j < 16; j++){
+		array[j] = ' ';
+	}
 	while (1){
 		P2 = 0x00;
-		if(i < 16){
+		if( i < 16){
 			if(P2 == 128) {
 				LCD_SendData ('A');
 				array[i] = 'A';
@@ -206,7 +208,7 @@ void main (){
 				for (j = 0; j < i ; j++){
 					LCD_SendData (array[j]);
 				}
-				LCD_SendCommand(0x0018);
+				LCD_SendCommand(0x00C0);
 				i = 0;
 			}
 		}
