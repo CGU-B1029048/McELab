@@ -10,7 +10,7 @@
 		- [Bonus 1](#bonus-1)
 			- [Pin Define and Button Detect](#pin-define-and-button-detect)
 			- [Main Function](#main-function-1)
-		- [Bonus 1](#bonus-1-1)
+		- [Bonus 2](#bonus-2)
 			- [Main Function Initialize](#main-function-initialize)
 			- [Main Function - Cursor Movement](#main-function---cursor-movement)
 			- [Main Function - Insert Data](#main-function---insert-data)
@@ -237,7 +237,7 @@ If we create newline at line 2, the data on line 1 will be discard.
 | P2.4   | newline                  |
 <div style="break-after: page; page-break-after: always;"></div>
 
-### Bonus 1
+### Bonus 2
 We implement the bonus 1 part here. (`lab05.c`)
 I'll skip the explaination of Pin define and button detect since it's the same as bonus 1.
 

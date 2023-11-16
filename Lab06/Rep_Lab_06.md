@@ -1,6 +1,6 @@
-# Microcontroller Experiment Lab05 Report
+# Microcontroller Experiment Lab06 Report
 
-- [Microcontroller Experiment Lab05 Report](#microcontroller-experiment-lab05-report)
+- [Microcontroller Experiment Lab06 Report](#microcontroller-experiment-lab06-report)
 	- [Problem Description](#problem-description)
 	- [Code \& Explanation](#code--explanation)
 		- [Basic](#basic)
@@ -25,20 +25,18 @@
 ## Problem Description
 + learn to display characters on the LCD
 + Basic: 
-  + Display the character pressed at the cursor position
-+ Bonus 1:
-  + Implement the "new-line" key
-  + Change to the next line if a new-line button is pressed at Line 1
-  + Scroll the screen if a new-line button is pressed at Line 2
-+ Bonus 2:
-  + Implement the arrow keys (up, down, left, right)
-  + Move the cursor by the arrow key
-  + Insert character at the cursor position
+  + “Draw” a still image, such as an apple, a tree, or a smiling face (Do not show meaningless lines, patches, or squares)
+  + Hint: find a tool to generate the 128x64 bitmap of your image (Google may help...)
++ Advanced:
+  + Initialized in the middle of 128x64 panel
+  + Animation
+    + Move the pattern horizontally [Note: The animation should pass through both panels!]
+    + Move the pattern vertically (+15%) [Note: the animation should move one pixel up / down at a time!]
 
 <div style="break-after: page; page-break-after: always;"></div>
 
 ## Code & Explanation
-We divide the Problem into 3 files to implement, `lab05_basic.c`, `Lab05_b1.c`, `Lab05.c`.
+We divide the Problem into 3 files to implement, `glcd.c`, `Lab06_bonus01.c`.
 ### Basic
 We implement the basic part here. (`lab05_basic.c`)
 #### Pin define

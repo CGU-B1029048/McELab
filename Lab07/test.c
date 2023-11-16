@@ -22,8 +22,8 @@ Timer_Configuration ()
 	CKCON = 0x10;
 
 	IE = 0x82;
-	TL0 = 0xfd;
-	TH0 = 0xeb;
+	TL0 = 0xec;
+	TH0 = 0xff;
 }//end of function Timer_Configuration
 
 void
@@ -50,9 +50,9 @@ void Timer0_ISR ();
 
 int main () {
 	Config ();
-	status = 0x00;
+	status = 0;
 	count = 0;
-	half_period = 12;
+	//half_period = 12;
 
 	while (1) {
 		P2 = status;
@@ -62,7 +62,7 @@ int main () {
 void Timer0_ISR () interrupt 1 {
 	count++;
 
-	if (count==half_period) {
+	if (count==100000) {
 		count = 0;
 		status = ~status;
 	}
