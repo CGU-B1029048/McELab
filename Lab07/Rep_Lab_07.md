@@ -38,8 +38,9 @@ To count the frequency and Time for ISR, formula is shown as following.
 $$ T = \frac{1}{f} $$
 When we set the ISR frequency as T and set it to ring the buzzer, The buzzer will make sound with frequency $f$.
 
-The 8051 board has a Oscillator cycle of 24.5MHz, With Timer mode 0 or 1, the timer will 除頻 by 12 to roughly 2MHz, cycle time of 0.5 $\mu$s
+The 8051 board has a Oscillator cycle of 24.5MHz, With Timer mode 0 or 1, the timer will 除頻 by 12 and divide 8 by default to roughly 0.255MHz, cycle time of 4 $\mu$s
 
+if 0xffec (TH_0, TL_0) $\rightarrow$ 24.5MHZ/12/1, roughly 0.01ms for 20 cycle.
 ## Code & Explanation
 We divide the Problem into 3 files to implement, `lab05_basic.c`, `Lab05_b1.c`, `Lab05.c`.
 ### Basic

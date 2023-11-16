@@ -43,7 +43,7 @@ Config ()
 }//end of function Default_Config
 
 unsigned char status;
-int count;
+int count, count_sec;
 int half_period;
 
 void Timer0_ISR ();
@@ -51,7 +51,7 @@ void Timer0_ISR ();
 int main () {
 	Config ();
 	status = 0;
-	count = 0;
+	count = 0, count_sec =0;
 	//half_period = 12;
 
 	while (1) {
@@ -61,8 +61,14 @@ int main () {
 
 void Timer0_ISR () interrupt 1 {
 	count++;
+	count_sec++;
 
-	if (count==100000) {
+	if (count_sec == 100000) { // 1sec
+		count_sec = 0;
+		n++;
+	}
+
+	if (count==song_table[n]) {
 		count = 0;
 		status = ~status;
 	}
@@ -71,6 +77,12 @@ void Timer0_ISR () interrupt 1 {
 	TL0 = 0x00;
 }//end of function Timer0_ISR
 
+void Timer1_ISR () interrupt 3 {
+	count_sec++;
+	if (count_sec == 100000) {
+		count_sec = 0;
 
+	}
+}
 
 
