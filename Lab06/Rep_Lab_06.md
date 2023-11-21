@@ -5,11 +5,11 @@
 	- [Code \& Explanation](#code--explanation)
 		- [Basic](#basic)
 			- [Pin define](#pin-define)
-			- [Button Detect](#button-detect)
-			- [Main function](#main-function)
+			- [Bitmap Generation](#bitmap-generation)
+			- [Page(half) Switch](#pagehalf-switch)
 		- [Bonus 1](#bonus-1)
 			- [Pin Define and Button Detect](#pin-define-and-button-detect)
-			- [Main Function](#main-function-1)
+			- [Main Function](#main-function)
 		- [Bonus 1](#bonus-1-1)
 			- [Main Function Initialize](#main-function-initialize)
 			- [Main Function - Cursor Movement](#main-function---cursor-movement)
@@ -36,66 +36,51 @@
 <div style="break-after: page; page-break-after: always;"></div>
 
 ## Code & Explanation
-We divide the Problem into 3 files to implement, `glcd.c`, `Lab06_bonus01.c`.
+We divide the Problem into 2 files to implement, `glcd.c`, `Lab06_bonus01.c`.
 ### Basic
-We implement the basic part here. (`lab05_basic.c`)
+We implement the basic part and the Initizlize part of Advanced here. (`Lab06_bonus01.c`)
 #### Pin define
 ```c
 #include "C8051F040.h"
-#include "LCD.h"
+#include "glcd.h"
+int mode;
 
-char LCD_status;
+void
+system_init_config ()
+{
+	//turn-off the watch-dog timer
+	WDTCN = 0xde;
+	WDTCN = 0xad;
 
-void LCD_PortConfig (){
 	//initialize SFR setup page
-	SFRPAGE = CONFIG_PAGE;                 // Switch to configuration page
-	P2MDIN = 0xff;	
-	P2MDOUT = 0x00;
-	P1MDOUT = 0xff;
+	SFRPAGE = CONFIG_PAGE;		// Switch to configuration page
 
 	//setup the cross-bar and configure the I/O ports
 	XBR2 = 0xc0;
-	P3MDOUT = 0x3f;
-	
-	//set to normal mode
-	SFRPAGE = LEGACY_PAGE;
-}//end of function LCD_PortConfig ()
+	P2MDOUT = 0xff;
+	P0MDOUT = 0xff;
+}//end of function system_init_config
 ```
-We setup the pin for this Lab. Use `P2` as button input, and `P1` for debugging. `P3` is used to communicate with LCD, which we moved from the example file given by the professor.
+Semae as the example file. `P2` & `P4` for controlling the GLCD. `P2` is used to select mode, left/right half and enable while `P4` for sending the data or command.
 
 <div style="break-after: page; page-break-after: always;"></div>
 
-#### Button Detect
+#### Bitmap Generation
 ```c
-void button_detect (){
-	char key_hold;
-	int key_release;
-	int count;
-	int N = 50;
-
-	do {
-		key_hold = P2;
-	} while (!key_hold);
-	
-	//Stage 2: wait for key released
-	key_release = 0;
-	count = N;
-	while (!key_release) {
-		key_hold = P2;
-		if (key_hold) {
-			count = N;
-		} else {
-			count--;
-			if (count==0) key_release = 1;
-		}
-	}//Stage 2: wait for key released
-}//end of function button_detect ()
+const unsigned char DVD[2][32] = {
+{0x00, 0xF0, 0xFB, 0x3B, 0x83, 0x83, 0x83, 0x83, 0xE7, 0x7F, 0x3F, 0x03, 0x07, 0x7F, 0xF8, 0xC0,
+0xC0, 0x70, 0x1C, 0x0E, 0x07, 0xC3, 0xFB, 0x7B, 0x03, 0x03, 0x83, 0x83, 0xC6, 0x7E, 0x3C, 0x00 },
+{0x00, 0x21, 0x31, 0x71, 0x71, 0x51, 0x50, 0x50, 0x58, 0x58, 0x48, 0x78, 0xC8, 0xC8, 0xCB, 0x89,
+0x88, 0xC8, 0xC8, 0xC8, 0x78, 0x49, 0x59, 0x59, 0x59, 0x51, 0x51, 0x50, 0x70, 0x30, 0x20, 0x20 }
+};
 ```
-We made the `button_detect()` to send the signal when `P2` button is pressed.
+We decide to generate this image
+![DVD](https://upload.wikimedia.org/wikipedia/zh/thumb/1/18/Dvd-video-logo.svg/1200px-Dvd-video-logo.svg.png)
+So we must first process the image into bitmap like above for GLCD to display.
 
 <div style="break-after: page; page-break-after: always;"></div>
 
-#### Main function
+#### Page(half) Switch
 We'll skip the LCD function given by the professor, we just modify the `example.c` directly. We only use `LCD_SendData()` to implement basic, and `LCD_init()`, `LCD_ClearScreen()` for initialization and clearscreen. Full code will be provide in the Appendix.
 ```c
 int main() {
