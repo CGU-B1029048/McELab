@@ -2,6 +2,7 @@
 
 - [Microcontroller Experiment Lab07 Report](#microcontroller-experiment-lab07-report)
 	- [Problem Description](#problem-description)
+	- [Theory Explaination](#theory-explaination)
 	- [Code \& Explanation](#code--explanation)
 		- [Basic](#basic)
 			- [Pin define](#pin-define)
@@ -34,15 +35,36 @@
     + Bonus: include the discussion of the previous two Q’s
 <div style="break-after: page; page-break-after: always;"></div>
 
+## Theory Explaination
 To count the frequency and Time for ISR, formula is shown as following.
 $$ T = \frac{1}{f} $$
 When we set the ISR frequency as T and set it to ring the buzzer, The buzzer will make sound with frequency $f$.
 
-The 8051 board has a Oscillator cycle of 24.5MHz, With Timer mode 0 or 1, the timer will 除頻 by 12 and divide 8 by default to roughly 0.255MHz, cycle time of 4 $\mu$s
+The 8051 board has a Oscillator cycle of 24.5MHz, With Timer mode 0 or 1, the timer will 除頻 by 12 and divide 1 (8 by default) to roughly 2MHz, cycle time of 0.5 $\mu$s
 
-if `0xffec (TH_0, TL_0)` $\rightarrow$ 24.5MHZ/12/1, roughly 0.01ms for 20 cycle.
+if we set `0xffec = (TH_0, TL_0)` $\rightarrow$ 20 cycle per 1 ISR, 
+$$24.5 \times 10^6 \text{(Hz)} \div 12 \div 1 = f\approx 2\times 10^6 $$
+$$T = 1/f \approx 5 \times 10^{-7} \text{(s)} = 0.5 (\mu s)$$
+$$20 \times 0.5 = 10 (\mu s) = 0.01 (ms)$$
+so we get roughly 0.01ms for 1 ISR cycle, which 100000 ISR cycle is a second.
+
+Then we get frequency of notes show as below.
+| Note | 簡譜 | Frequency (Hz) |
+|---|---|---|
+| Do | 1 | 261.63 |
+| Re | 2 | 293.66 |
+| Mi | 3 | 329.63 |
+| Fa | 4 | 349.23 |
+| So | 5 | 392 |
+| La | 6 | 440 |
+| Si | 7 | 493.88 |
+| 高音Do | 1^ | 523.25 |
+So wwe get the frequency of the note $f_{notes}$, we which means the buzzer must give $f_{notes}$ pulses. So we got the following formula for pulses generation.
+$$T = \frac{1}{2} \times \frac{1}{f_{notes}}$$
+note: T get divided by 2 since a pulse cycle is on $\rightarrow$ off $\rightarrow$ on, 2 operation.
+
 ## Code & Explanation
-We divide the Problem into 3 files to implement, `lab05_basic.c`, `Lab05_b1.c`, `Lab05.c`.
+We divide the Problem into 3 files to implement, `lab07_basic.c`, `Lab07_b1.c`.
 ### Basic
 We implement the basic part here. (`lab05_basic.c`)
 #### Pin define
