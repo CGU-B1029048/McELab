@@ -63,6 +63,8 @@ So wwe get the frequency of the note $f_{notes}$, we which means the buzzer must
 $$T = \frac{1}{2} \times \frac{1}{f_{notes}}$$
 note: T get divided by 2 since a pulse cycle is on $\rightarrow$ off $\rightarrow$ on, 2 operation.
 
+But the board has bug so actually 50000 ISR cycle is 1 second. Our setting at.
+
 ## Code & Explanation
 We divide the Problem into 3 files to implement, `lab07_basic.c`, `Lab07_b1.c`.
 ### Basic

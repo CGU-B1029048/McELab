@@ -6,7 +6,8 @@
 		- [Basic](#basic)
 			- [Pin define](#pin-define)
 			- [Bitmap Generation](#bitmap-generation)
-			- [Page(half) Switch](#pagehalf-switch)
+			- [Switch Page(half)](#switch-pagehalf)
+			- [Draw function, at middle (basic and bonus 1)](#draw-function-at-middle-basic-and-bonus-1)
 		- [Bonus 1](#bonus-1)
 			- [Pin Define and Button Detect](#pin-define-and-button-detect)
 			- [Main Function](#main-function)
@@ -80,40 +81,32 @@ So we must first process the image into bitmap like above for GLCD to display.
 
 <div style="break-after: page; page-break-after: always;"></div>
 
-#### Page(half) Switch
-We'll skip the LCD function given by the professor, we just modify the `example.c` directly. We only use `LCD_SendData()` to implement basic, and `LCD_init()`, `LCD_ClearScreen()` for initialization and clearscreen. Full code will be provide in the Appendix.
+#### Switch Page(half)
+By setup the P2_CWORD_TEMPLATE, we can change page in GLCD.
+We modify the code in `glcd.h` to define the setting of Right page and left page.
 ```c
-int main() {
-	int i;
-	P1 = 0x00;
-	Shutup_WatchDog ();
-	LCD_PortConfig ();
-	LCD_Init ();
-	LCD_ClearScreen ();
-	P1 = 0xff;
-	while (1){
-		P2 = 0x00;
-		//button_detect();
-		if(P2 == 128) {
-			LCD_SendData ('A');
-		} else if(P2 == 64){
-			LCD_SendData ('B');
-		} else if(P2 == 32){
-			LCD_SendData ('C');
-		}
-		//LCD_PrintString ("Hello World!!!");
-	}
-
-	while (1);
-}
+#define P2_CWORD_TEMPLATE_RIGHT	0x21
+#define P2_CWORD_TEMPLATE_LEFT	0x22
 ```
-We'll first initialize the LCD before while loop, `P1` is for debug usage.
-Then we'll enter the while loop. After `P2` button pressed, we'll go into different if statement and trigger `LCD_SendData()` to send different characters. Then `LCD_SendData()` will send the data to LCD and display it. The button and the data sent inside is shown as table below.
-| button | Data Sent in LCD |
-|--------|------------------|
-| P2.7   | A                |
-| P2.6   | B                |
-| P2.5   | C                |
+Then we do the switch page function using a global variable `mode` to define which page we are at and which page we want to print image.
+| mode | Page  |
+|------|-------|
+| 0    | right |
+| 1    | left  |
+Then we change all code which require to set page like `Set_DisplayOn()`, `Set_Xddr()`, `Set_Yaddr()` etc, and add the following code to make them change page according to `mode`.
+```c
+//right
+if (mode == 0)
+	P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+//left
+else
+	P2_cword = P2_CWORD_TEMPLATE_LEFT;
+```
+
+<div style="break-after: page; page-break-after: always;"></div>
+
+#### Draw function, at middle (basic and bonus 1)
+
 
 <div style="break-after: page; page-break-after: always;"></div>
 
