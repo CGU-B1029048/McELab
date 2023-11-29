@@ -7,21 +7,16 @@
 			- [Pin define](#pin-define)
 			- [Bitmap Generation](#bitmap-generation)
 			- [Switch Page(half)](#switch-pagehalf)
-			- [Draw function, at middle (basic and bonus 1)](#draw-function-at-middle-basic-and-bonus-1)
-		- [Bonus 1](#bonus-1)
-			- [Pin Define and Button Detect](#pin-define-and-button-detect)
+			- [Initialize at middle (basic and bonus 1)](#initialize-at-middle-basic-and-bonus-1)
+		- [Bonus 2](#bonus-2)
 			- [Main Function](#main-function)
-		- [Bonus 1](#bonus-1-1)
-			- [Main Function Initialize](#main-function-initialize)
-			- [Main Function - Cursor Movement](#main-function---cursor-movement)
-			- [Main Function - Insert Data](#main-function---insert-data)
+			- [Draw Function](#draw-function)
 	- [Difficulties Encountered and Solutions](#difficulties-encountered-and-solutions)
 	- [Disscussion](#disscussion)
 	- [Appendix](#appendix)
 		- [Full code](#full-code)
-			- [`lab05_basic.c`](#lab05_basicc)
-			- [`Lab05_b1.c`](#lab05_b1c)
-			- [`Lab05.c`](#lab05c)
+			- [`Lab06_bouns01.c`](#lab06_bouns01c)
+			- [`glcd.c`](#glcdc)
     
 ## Problem Description
 + learn to display characters on the LCD
@@ -77,7 +72,7 @@ const unsigned char DVD[2][32] = {
 ```
 We decide to generate this image
 ![DVD](https://upload.wikimedia.org/wikipedia/zh/thumb/1/18/Dvd-video-logo.svg/1200px-Dvd-video-logo.svg.png)
-So we must first process the image into bitmap like above for GLCD to display.
+So we must first process the image into bitmap like above for GLCD to display. We use 小畫家 to adjust this picture into 32x32 pixels btimap `.bmp` file. At last use LCDAssistant transfer to array above.
 
 <div style="break-after: page; page-break-after: always;"></div>
 
@@ -89,10 +84,12 @@ We modify the code in `glcd.h` to define the setting of Right page and left page
 #define P2_CWORD_TEMPLATE_LEFT	0x22
 ```
 Then we do the switch page function using a global variable `mode` to define which page we are at and which page we want to print image.
+
 | mode | Page  |
-|------|-------|
+|:---:|:---:|
 | 0    | right |
 | 1    | left  |
+
 Then we change all code which require to set page like `Set_DisplayOn()`, `Set_Xddr()`, `Set_Yaddr()` etc, and add the following code to make them change page according to `mode`.
 ```c
 //right
@@ -105,931 +102,1084 @@ else
 
 <div style="break-after: page; page-break-after: always;"></div>
 
-#### Draw function, at middle (basic and bonus 1)
-
-
-<div style="break-after: page; page-break-after: always;"></div>
-
-### Bonus 1
-We implement the bonus 1 part here. (`lab05_b1.c`)
-
-#### Pin Define and Button Detect
+#### Initialize at middle (basic and bonus 1)
 ```c
-#include "C8051F040.h"
-#include "LCD.h"
-
-char LCD_status;
-char array[16];
-int i = 0;
-int j = 0;
-int k = 0;
-
-void LCD_PortConfig () {
-	//initialize SFR setup page
-	SFRPAGE = CONFIG_PAGE;                 // Switch to configuration page
-	P2MDIN = 0xff;	
-	P2MDOUT = 0x00;
-	P1MDOUT = 0xff;
-
-	//setup the cross-bar and configure the I/O ports
-	XBR2 = 0xc0;
-	P3MDOUT = 0x3f;
+main ()
+{
+	system_init_config ();
 	
-	//set to normal mode
-	SFRPAGE = LEGACY_PAGE;
-}//end of function LCD_PortConfig ()
+	GLCD_Reset ();
+	
+	//draw right
+	mode = 0;
+	Set_DisplayOn (mode);
+	draw(mode);	
+
+	//draw left
+	mode = 1;
+	Set_DisplayOn (mode);
+	draw(mode);	
+	
+	while (1);
+}//end of function main
 ```
-Basically the same as basic, so I only show the global varible declaration and pin setup.
+We claer the GLCD first and then draw the right page then left page, by controlling the `mode`. `draw()` will adjust the data by itself shown as below. 
+```c
+void draw(int mode) //mode 0 right, 1 left
+{
+	int i, x;
+	Set_DisplayStartLine (0);
+	Set_Yaddr (0);
+	x = 0;
+	Set_Xaddr (x);
+	if (!mode) { //draw right
+		for (i=16;i<32;i++)
+			Send_Data (DVD[x][i]);
+	}
+	for (i = 16; i < 64; i++)
+		Send_Data (0x00);
+	if (mode) { //draw left
+		for (i=0;i<16;i++)
+			Send_Data (DVD[x][i]);
+	}
+
+	Set_Xaddr (++x);
+	if (!mode) { //draw right
+		for (i=16;i<32;i++)
+			Send_Data (DVD[x][i]);
+	}
+	for (i = 16; i < 64; i++)
+		Send_Data (0x00);
+	if (mode) { //draw left
+		for (i=0;i<16;i++)
+			Send_Data (DVD[x][i]);
+	}
+
+	Set_Xaddr (++x);
+	for (i=0;i<64;i++)
+		Send_Data (0x00);
+
+	Set_Xaddr (++x);
+	for (i=0;i<64;i++)
+		Send_Data (0x00);
+
+	Set_Xaddr (++x);
+	for (i=0;i<64;i++)
+		Send_Data (0x00);
+
+	Set_Xaddr (++x);
+	for (i=0;i<64;i++)
+		Send_Data (0x00);
+
+	Set_Xaddr (++x);
+	for (i=0;i<64;i++)
+		Send_Data (0x00);
+
+	Set_Xaddr (++x);
+	for (i=0;i<64;i++)
+		Send_Data (0x00);
+}
+```
+As we store the data in `DVD`, we use if-statement to make it draw the left part when `mode = 1`, i.e `DVD[x][0~15]`, and right part when `mode = 0`, i.e `DVD[x][16~31]`.
 
 <div style="break-after: page; page-break-after: always;"></div>
+
+### Bonus 2
+We implement the bonus 2 part here. (`glcd.c`)
+The bonus 2 modify 2 part, `main` for button control and `draw()` for drawing.
 
 #### Main Function
-As the same, I'll skip the display of LCD control function given in the example file. Full code will be provided in the Appendix.
 ```c
-void main (){
-	//int i;
+main ()
+{
+	system_init_config ();
+	
+	GLCD_Reset ();
+	mode = 0;
+	GLCD_Clean();
+	mode = 1;
+	GLCD_Clean();
+
 	P1 = 0x00;
-	Shutup_WatchDog ();
-	LCD_PortConfig ();
-	LCD_Init ();
-	LCD_ClearScreen ();
-	P1 = 0xff;
-	for (j = 0; j < 16; j++){
-		array[j] = ' ';
-	}
-	while (1){
-		P2 = 0x00;
-		if( i < 16){
-			if(P2 == 128) {
-				LCD_SendData ('A');
-				array[i] = 'A';
-				i++;
-			} else if(P2 == 64){
-				LCD_SendData ('B');
-				array[i] = 'B';
-				i++;
-			} else if(P2 == 32){
-				LCD_SendData ('C');
-				array[i] = 'C';
-				i++;
-			} else if(P2 == 16){
-				LCD_ClearScreen ();
-				//LCD_PrintString (array);
-				for (j = 0; j < i ; j++){
-					LCD_SendData (array[j]);
-				}
-				LCD_SendCommand(0x00C0);
-				i = 0;
-			}
-		} else {
-			if(P2 == 16){
-				LCD_ClearScreen ();
-				//LCD_PrintString (array);
-				for (j = 0; j < i ; j++){
-					LCD_SendData (array[j]);
-				}
-				LCD_SendCommand(0x00C0);
-				i = 0;
-			}
-		}
-		//LCD_PrintString ("Hello World!!!");
-	}
+	z_cur = 0;
+	y_cur = 48;
+	while(1){
+		if(P1 == 1) z_cur++;
+		if(P1 == 2) z_cur--;
+		if(P1 == 4 && y_cur < 96) y_cur++;
+		if(P1 == 8 && y_cur >0) y_cur--;
+		//draw right
+		mode = 0;
+		Set_DisplayOn (mode);
+		draw(mode, z_cur, y_cur);	
 
-	while (1);
-
-}		
+		//draw left
+		mode = 1;
+		Set_DisplayOn (mode);
+		draw(mode, z_cur, y_cur);
+	}
+}//end of function main		
 ```
-Since we have to implement the newline key, we must first store the data we type into an `char` array name `array`, so that when we change line, the data on the second line can be moved to the first, thus create a newline.
-After initialize the LCD, we clear the `array` by input space character `' '` in it. using for loop. 
-Then, we use `i` to represent the cursor position. We limited `i` < 16 so no data can be input after current line is full. If `i` $\geq$ 16, only newline key will work, A,B,C buttons pressed won't send data into LCD.
-After button for A, B, c is pressed, we'll send data into the LCD and also store the data in `array`, and move the cursor with `i++`.
-When newline key is pressed, we'll clear the screen using `LCD_ClearScreen()`, then the cursor will be set to the begining of first line. We then print the data stored in `array`. Finally, we set the cursor to begining of line 2 and reset cursor position to 0, creating the newline function.
-If we create newline at line 2, the data on line 1 will be discard.
-| button | Data/Command Sent to LCD |
+We first Clean the GLCD, for our image to move, we use 4 button for up, down, right, left. To implement, we first set `z_cur` and `y_cur` to be the x and y coordinate on GLCD. So when button were pressed, our coordinate will change accordingly. Since y axis may change page, so we add the limit for y so it won't go out of border.
+
+Buttons to their correspond command is list at table next page.
+
+<div style="break-after: page; page-break-after: always;"></div>
+
+
+| button | Command Sent to GLCD     |
 |--------|--------------------------|
-| P2.7   | A  (data)                |
-| P2.6   | B  (data)                |
-| P2.5   | C  (data)                |
-| P2.4   | newline                  |
-<div style="break-after: page; page-break-after: always;"></div>
+| P1.0   | up                       |
+| P1.1   | down                     |
+| P1.2   | right                    |
+| P1.3   | left                     |
 
-### Bonus 1
-We implement the bonus 1 part here. (`lab05.c`)
-I'll skip the explaination of Pin define and button detect since it's the same as bonus 1.
 
-#### Main Function Initialize
+#### Draw Function
 ```c
-void main (){
-	P1 = 0x00;
-	Shutup_WatchDog ();
-	LCD_PortConfig ();
-	LCD_Init ();
-	LCD_ClearScreen ();
-	P1 = 0xff;
-	cur_x = 0;
-	cur_y = 0;
-	for (a = 0; a < 16; a++){
-		array[0][a] = ' ';
-		array[1][a] = ' ';
-	}
-	while (1){ ... } //The part is too long so will explain later
-}
-```
-The initialization for main function. Since this the we must move the cursor, we use `cur_x` and `cur_y` to record cursor position. We also record the whole data on LCD with a 16 x 2 array called `array`. We also initializ the `array` here.
-The function main has implement and their correspond button is list at the following table.
-| Button | Function         |
-|--------|------------------|
-| P2.7   | Print A on LCD   |
-| P2.6   | Print B on LCD   |
-| P2.5   | Print C on LCD   |
-| P2.3   | Move cursor left |
-| P2.2   | Move cursor right|
-| P2.1   | Move cursor up   |
-| P2.0   | Move cursor down |
-<div style="break-after: page; page-break-after: always;"></div>
+void draw(int mode, int z_in, int y_in) //mode 0 right, 1 left
+{
+	int i, x;
+	Set_DisplayStartLine (z_in);
 
-#### Main Function - Cursor Movement
-```c
-	while (1) {
-		P2 = 0x00;
-		if    (P2 == 128) { ... } // Insert A
-		else if(P2 == 64) { ... } // Insert B
-		else if(P2 == 32) { ... } // Insert C
-		// cursor left
-		else if (P2 == 8) {
-			if (cur_x > 0) {
-				LCD_SendCommand(0x0010);
-				cur_x--;
-			}
-		// cursor right
-		} else if (P2 == 4) {
-			if (cur_x < 15) {
-				LCD_SendCommand(0x0014);
-				cur_x++;
-			}
-		// cursor up
-		} else if (P2 == 2) {
-			if (cur_y == 1) {
-				cur_y = 0;
-				jump_cursor(cur_x, cur_y);
-			}
-		// cursor down
-		} else if (P2 == 1) {
-			if (cur_y == 0) {
-				cur_y = 1;
-				jump_cursor(cur_x, cur_y);
-			}
+	for (x = 0; x < 2; x++) {
+		Set_Xaddr (x);
+
+		if (mode && y_in < 64) { //draw left
+			Set_Yaddr (y_in);
+			for (i=0;i < ((y_in > 32) ? 64 - y_in : 32);i++)
+				Send_Data (DVD[x][i]);
+		}
+
+		if (!mode && y_in > 32) { //draw right
+			Set_Yaddr((y_in < 64)? 0: y_in-64);
+			for (i = ((y_in > 63) ? 0 : 64 - y_in);i < 32;i++)
+				Send_Data (DVD[x][i]);
 		}
 	}
-```
-To implement cursor Left/Right, we simply send the cursor go left/right command using `LCD_SendCommand()` to achieve it. After that, we change the `cur_x` to match the cursor position according to the cursor movement. We limited the cursor to be in the LCD screen, so `cur_x` is limited between 0 ~ 15, out of edge movement won't be executed. For example, `cur_x` cannot go right at `cur_x` = 15.
-To implement cursor up/down, we limited the cursor cannot go out of edge, so we'll check if the cursor have space to go up or down. If their is no space, the command won't be executed. Otherwise we change the `cur_y` to the correspond up/left command (note: `cur_y` = 0 is line 1, `cur_y` = 1 is line 2), then jump to the new cursor position using `jump_cursor()`.
-`jump_cursor()` explaination
-```c
-void jump_cursor(int x, int y) {
-	if (y) {LCD_SendCommand(0x00C0);}
-	else {LCD_SendCommand(0x0002);}
-	for (a = 0; a < x; a++) {
-		LCD_SendCommand(0x0014);
-	}
 }
 ```
-We jump to begining of line 1 or 2 according to the input `cur_y`, then move cursor right until it's at `cur_x` position.
 
-#### Main Function - Insert Data
-```c
-void insert_data(char c) {
-	LCD_SendData(c);
-	for (a = cur_x; a < 15; a++) {
-		k = array[cur_y][a+1];
-		array[cur_y][a+1] = array[cur_y][cur_x];
-		LCD_SendData(array[cur_y][a+1]);
-		array[cur_y][cur_x] = k;
-	}
-	array[cur_y][cur_x] = c;
-}
-```
-We insert the input data `c` at the current cursor position, and move all data behind the current cursor position (including the current one overwritten by the inserted data) left for 1 space, and update the data in `array` in the for loop.
-Then back to `main` function.
-```c
-	while (1){
-		P2 = 0x00;
-		// Insert A
-		if(P2 == 128) {
-			insert_data('A');
-			if (cur_x < 15) {
-				cur_x++;
-			}
-			jump_cursor(cur_x, cur_y);
-		// Insert B
-		} else if(P2 == 64){
-			insert_data('B');
-			if (cur_x < 15) {
-				cur_x++;
-			}
-			jump_cursor(cur_x, cur_y);
-		// Insert C
-		} else if(P2 == 32){
-			insert_data('C');
-			if (cur_x < 15) {
-				cur_x++;
-			}
-			jump_cursor(cur_x, cur_y);}
-		...//cursor movement function, mentioned above
-	}
-```
-We thus fininshed the insert data part. After pressed the insert data A,B,C buttons, data will be inserted and displayed using `insert_data()`, then update the cursor position and jump the cursor back to it's position using `jump_cursor()`.
-The function will not be executed when the line is full, i.e. `cur_x` = 15.
+The function will draw the DVD picture at the given x and y coordinate.
+x-axis is implement with `Set_DisplayStartLine()` so the line will begin drawing at given line, creating up and down movement.
+The we make it to draw according to y-axis. 
+If `y < 33` the picture will only on the left page, so we only make it draw all of it.
+Same as `y > 64` as it only show on page right.
+When `y` is between, it require to change page. So we make it to draw from start to edge of left page, then draw from start of right page to the end.
+Thus complete to drawing function.
+
+Here is the result : [Bonus 2](https://drive.google.com/file/d/1Wp_rUQY8yNIvYPNadDtL0BmNVZsCsp-q/view?usp=sharing)
+
+<div style="break-after: page; page-break-after: always;"></div>
 
 ## Difficulties Encountered and Solutions
-We've encounter quite a lot of problem this time.
-First is the Board Problem. Maybe our luck is too good, we have already meet a lot of time from lab3 until now. This lab we spend 2 weeks to complete, but we encountered it at both week. Always when we are debugging on our code, but it turns out that is board problem. Hope next time we can find a borad without problem at the first time.
-Later, wehn we are making our bonus 1, we encounter an overflow at line changing at demo. When pressed over 16 time from 0, the character will disappear at LCD and after 24 times it will display in the second row. We thus go and redesign our code. We come out with a solution by resrict our data length, which limit them in only 16 characters, thus solve the problem.
-Finally, When we working on bonus 2, while inserting data at the cursor position, the LCD always cannot display correct characters behind insert data. Which caused us a lot of time debugging. After we ask the professor and TA, we found out is our code's logic has flaw. We then rewrite our `insert_data()` function, which solved our problem.
+First, DVD image cannot transfer to correct image, we've tried many method, online trannsfer won't work at all, always filled with 0xff. So we look for another tool to transfer and find the suitable size let DVD can display on GLCD normally.
+
+Then, we stuck on finding how to change the left/right page. Since we need to display the image on the middle of the screen, and we find that when image display on left side is define at `P2_CWORD_TEMPLATE`
+
+| `P2_CWORD_TEMPLATE` | value | `CS1`/`CS1`|
+|---|---|---|
+|`P2_CWORD_TEMPLATE_RIGHT`| `0x21` | 0/1 |
+|`P2_CWORD_TEMPLATE_LEFT` | `0x22` | 1/0 |
+
+Then we stuck on moving in the x dimension of GLCD, we thought we must calculate all data to do left shift and right shift for up and down, which will be a really hard task. Thankfully, When we study at the ppt we find that can use `Set_DisplayStartLine()` to implement it.
+
+Finally, when doing move left/right page, we find that when we change the page and it will have one pixel didn’t clean after go right and return back, because it don’t clean well, so we let DVD last pixel be `0x00` to solve this problem.
 
 ## Disscussion
-After this Lab, I've understand more about how to program the LCD in C with 8051 board. I've also learn how to position the cursor with C, and how inserting a character might take to display it. We were used to typing and inserting word in program such as word or VScode, even terminal. They've written these function already so we don't need to worry for it. By this Lab, I've understand more about the control of it. But the most of it is, again, our 8051 board. We've almost encountered failure board every time in lab recently, and struggled for so long to find our is the board have problem. Hope next Lab we can be free from the cycle of getting failure boards.
+After this Lab, I've understand more about how to program the GLCD in C with 8051 board. I've also learn how to position the picture with GLCD board, and how pictures are displayed. Image must transfer into bitmap for the GLCD to display. Also we've complete the classic DVD loading screen on the board, which is a nice achieve to done.
+
+[DVD loading screen](https://drive.google.com/file/d/1vYLmvUxdT4ocX9uWEIGUiN8jOg_c--Ky/view?usp=sharing)
 
 <div style="break-after: page; page-break-after: always;"></div>
 
 ## Appendix
 ### Full code
-#### `lab05_basic.c`
+#### `Lab06_bouns01.c`
 ```c
 /*******************************************************************************
  *
- * the LCD infrastructure module
+ * file: [glcd.c]
  *
  ******************************************************************************/
 
 #include "C8051F040.h"
-#include "LCD.h"
-
-char LCD_status;
-
-void button_detect (){
-	char key_hold;
-	int key_release;
-	int count;
-	int N = 50;
-
-	do {
-		key_hold = P2;
-	} while (!key_hold);
-	
-	//Stage 2: wait for key released
-	key_release = 0;
-	count = N;
-	while (!key_release) {
-		key_hold = P2;
-		if (key_hold) {
-			count = N;
-		} else {
-			count--;
-			if (count==0) key_release = 1;
-		}
-	}//Stage 2: wait for key released
-}//end of function button_detect ()
-
-void LCD_PortConfig (){
-	//initialize SFR setup page
-	SFRPAGE = CONFIG_PAGE;                 // Switch to configuration page
-	P2MDIN = 0xff;	
-	P2MDOUT = 0x00;
-	P1MDOUT = 0xff;
-
-	//setup the cross-bar and configure the I/O ports
-	XBR2 = 0xc0;
-	P3MDOUT = 0x3f;
-	
-	//set to normal mode
-	SFRPAGE = LEGACY_PAGE;
-}//end of function LCD_PortConfig ()
-
-/****************
-The delay_lcd seem to be not long enough. 
-Try to change the default value as 10000...
-****************/
-unsigned int delay_lcd=20000;
-
-void LCD_Delay (){
-	int i;
-	for (i=0;i<delay_lcd;i++); // wait for a long enough time...
-}
-
-void
-LCD_SendCommand (char cmd);
-
-void
-LCD_Init ()
-{
-	LCD_SendCommand(0x02);        // Initialize as 4-bit mode
-	LCD_SendCommand (0x28);		//Display function: 2 rows for 4-bit data, small 
-	LCD_SendCommand (0x0e);		//display and curson ON, curson blink off
-	LCD_SendCommand (0x01);		//clear display, cursor to home
-	//LCD_SendCommand (0x10);		//cursor shift left
-	//LCD_SendCommand (0x06);		//cursor increment, shift off
-}
-
-void
-LCD_Status_SetRS ()
-{
-	LCD_status = LCD_status | 1;
-}
-
-void
-LCD_Status_ClearRS ()
-{
-	LCD_status = LCD_status & 0xfe;
-}
-
-void
-LCD_Status_SetWord (char word)
-{
-	word = word & 0x0f;
-	LCD_status = LCD_status & 0x03;
-	LCD_status = LCD_status | (word<<2);
-}
-
-void
-LCD_Status_SetEnable ()
-{
-	LCD_status = LCD_status | 0x02;
-}
-
-
-void
-LCD_Status_ClearEnable ()
-{
-	LCD_status = LCD_status & 0xfd;
-}
-
-
-void
-LCD_SendCommand (char cmd)
-{
-	LCD_Status_ClearRS ();
-
-	///send the higher half
-	LCD_Status_SetWord ((cmd>>4) & 0x0f);
-	LCD_Status_SetEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-	LCD_Status_ClearEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-
-	///send the lower half
-	LCD_Status_SetWord (cmd&0x0f);
-	LCD_Status_SetEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-	LCD_Status_ClearEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-}
-
-void
-LCD_SendData (char dat)
-{
-	LCD_Status_SetRS ();
-
-	///send the higher half
-	LCD_Status_SetWord ((dat>>4) & 0x0f);
-	LCD_Status_SetEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-	LCD_Status_ClearEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-
-	///send the lower half
-	LCD_Status_SetWord (dat&0x0f);
-	LCD_Status_SetEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-	LCD_Status_ClearEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-}
-
-void LCD_PrintString (char* str){
-	int i;
-
-	for (i=0; str[i]!=0; i++) {
-		LCD_SendData (str[i]);
-	}//for i
-}
-
-
-void
-LCD_ClearScreen ()
-{
-	LCD_SendCommand (0x01);
-}
-
-
-void Shutup_WatchDog (){
-	WDTCN = 0xde;
-	WDTCN = 0xad;
-}//end of function Shutup_WatchDog
-
-
-void main (){
-	//int i;
-	P1 = 0x00;
-	Shutup_WatchDog ();
-	LCD_PortConfig ();
-	LCD_Init ();
-	LCD_ClearScreen ();
-	P1 = 0xff;
-	while (1){
-		P2 = 0x00;
-		//button_detect();
-		if(P2 == 128) {
-			LCD_SendData ('A');
-		} else if(P2 == 64){
-			LCD_SendData ('B');
-		} else if(P2 == 32){
-			LCD_SendData ('C');
-		}
-		//LCD_PrintString ("Hello World!!!");
-	}
-
-	while (1);
-
-}
-```
-
-#### `Lab05_b1.c`
-```c
+#include "glcd.h"
+int mode;
 /*******************************************************************************
  *
- * the LCD infrastructure module
+ * functions for configuring the hardware
  *
  ******************************************************************************/
 
-#include "C8051F040.h"
-#include "LCD.h"
+void
+set_GLCD_WriteMode ()
+{
+	P4MDOUT = 0xff;
+}//end of function set_GLCD_WriteMode
 
-char LCD_status;
-char array[16];
-int i = 0;
-int j = 0;
 
-void button_detect (){
-	char key_hold;
-	int key_release;
-	int count;
-	int N = 50;
+void
+set_GLCD_ReadMode ()
+{
+	P4MDOUT = 0x00;
+	P4 = 0xff;
+}//end of function set_GLCD_ReadMode
 
-	do {
-		key_hold = P2;
-	} while (!key_hold);
-	
-	//Stage 2: wait for key released
-	key_release = 0;
-	count = N;
-	while (!key_release) {
-		key_hold = P2;
-		if (key_hold) {
-			count = N;
-		} else {
-			count--;
-			if (count==0) key_release = 1;
-		}
-	}//Stage 2: wait for key released
-}//end of function button_detect ()
+void
+system_init_config ()
+{
+	//turn-off the watch-dog timer
+	WDTCN = 0xde;
+	WDTCN = 0xad;
 
-void LCD_PortConfig (){
 	//initialize SFR setup page
-	SFRPAGE = CONFIG_PAGE;                 // Switch to configuration page
-	P2MDIN = 0xff;	
-	P2MDOUT = 0x00;
-	P1MDOUT = 0xff;
+	SFRPAGE = CONFIG_PAGE;		// Switch to configuration page
 
 	//setup the cross-bar and configure the I/O ports
 	XBR2 = 0xc0;
-	P3MDOUT = 0x3f;
+	P2MDOUT = 0xff;
+	P0MDOUT = 0xff;
+}//end of function system_init_config
+
+
+/*******************************************************************************
+ *
+ * functions to drive hardware signals
+ *
+ ******************************************************************************/
+
+void
+GLCD_delay ()
+{
+	int i;
+	for (i=0;i<10;i++);
+}//end of function GLCD_delay
+
+void
+GLCD_Write (char P2_cword, char P4_cword)
+{
+	char P2_cword_rep;
+
+	P2_cword_rep = P2_cword;
+	set_GLCD_WriteMode ();
+	GLCD_delay ();
+
+	P2_cword_rep = P2_cword_rep & (~P2_E);	//clear E bit
+	P2 = P2_cword_rep;
+	P4 = P4_cword;
+	GLCD_delay ();
+
+	P2_cword_rep = P2_cword_rep | P2_E;		//set E bit
+	P2 = P2_cword_rep;
+	GLCD_delay ();
+
+	P2_cword_rep = P2_cword_rep & (~P2_E);	//clear E bit
+	P2 = P2_cword_rep;
+	GLCD_delay ();
+	P0 = P2_cword_rep; // nien debug
 	
-	//set to normal mode
-	SFRPAGE = LEGACY_PAGE;
-}//end of function LCD_PortConfig ()
+}//end of function GLCD_Write
 
-/****************
-The delay_lcd seem to be not long enough. 
-Try to change the default value as 10000...
-****************/
-unsigned int delay_lcd=20000;
-
-void LCD_Delay (){
-	int i;
-	for (i=0;i<delay_lcd;i++); // wait for a long enough time...
-}
-
-void
-LCD_SendCommand (char cmd);
-
-void LCD_Init (){
-	LCD_SendCommand(0x02);        // Initialize as 4-bit mode
-	LCD_SendCommand (0x28);		//Display function: 2 rows for 4-bit data, small 
-	LCD_SendCommand (0x0e);		//display and curson ON, curson blink off
-	LCD_SendCommand (0x01);		//clear display, cursor to home
-	//LCD_SendCommand (0x10);		//cursor shift left
-	//LCD_SendCommand (0x06);		//cursor increment, shift off
-}
-
-void LCD_Status_SetRS (){
-	LCD_status = LCD_status | 1;
-}
-
-void
-LCD_Status_ClearRS ()
+char
+GLCD_Read (char P2_cword)
 {
-	LCD_status = LCD_status & 0xfe;
-}
+	char status;
+	char P2_cword_rep;
 
-void LCD_Status_SetWord (char word){
-	word = word & 0x0f;
-	LCD_status = LCD_status & 0x03;
-	LCD_status = LCD_status | (word<<2);
-}
+	P2_cword_rep = P2_cword;
+	set_GLCD_ReadMode ();
+	GLCD_delay ();
 
-void LCD_Status_SetEnable (){
-	LCD_status = LCD_status | 0x02;
-}
+	P2_cword_rep = P2_cword_rep & (~P2_E);		//clear E bit
+	P2 = P2_cword_rep;
+	GLCD_delay ();
+
+	P2_cword_rep = P2_cword_rep | P2_E;			//set E bit  
+	P2 = P2_cword_rep;
+	GLCD_delay ();
+
+	status = P4;
+
+	P2_cword_rep = P2_cword_rep & (~P2_E);		//clear E bit
+	P2 = P2_cword_rep;
+	GLCD_delay ();
+
+	return status;
+}//end of function GLCD_Read
 
 
-void LCD_Status_ClearEnable (){
-	LCD_status = LCD_status & 0xfd;
-}
+
+/*******************************************************************************
+ *
+ * GLCD read operations
+ *
+ ******************************************************************************/
+
+char
+GLCD_ReadStatus ()
+{
+	char P2_cword;
+	char status;
+
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword & (~P2_RS);
+	P2_cword = P2_cword | (P2_RW);
+	status = GLCD_Read (P2_cword);
+
+	return status;
+}//end of function GLCD_ReadStatus
 
 
-void LCD_SendCommand (char cmd){
-	LCD_Status_ClearRS ();
+char
+GLCD_ReadData ()
+{
+	char P2_cword;
+	char dat;
 
-	///send the higher half
-	LCD_Status_SetWord ((cmd>>4) & 0x0f);
-	LCD_Status_SetEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-	LCD_Status_ClearEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword | (P2_RS);
+	P2_cword = P2_cword | (P2_RW);
+	dat = GLCD_Read (P2_cword);
 
-	///send the lower half
-	LCD_Status_SetWord (cmd&0x0f);
-	LCD_Status_SetEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-	LCD_Status_ClearEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-}
+	return dat;
+}//end of function GLCD_ReadData
 
-void LCD_SendData (char dat){
-	LCD_Status_SetRS ();
+int
+GLCD_IsBusy ()
+{
+	char status;
 
-	///send the higher half
-	LCD_Status_SetWord ((dat>>4) & 0x0f);
-	LCD_Status_SetEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-	LCD_Status_ClearEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
+	status = GLCD_ReadStatus ();
+	if (status&P4_Busy)
+		return 1;
+	else
+		return 0;
+}//end of function GLCD_IsBusy
 
-	///send the lower half
-	LCD_Status_SetWord (dat&0x0f);
-	LCD_Status_SetEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-	LCD_Status_ClearEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-}
 
-void LCD_PrintString (char* str){
-	int i;
+int
+GLCD_IsReset ()
+{
+	char status;
 
-	for (i=0; str[i]!=0; i++) {
-		LCD_SendData (str[i]);
-	}//for i
-}
+	status = GLCD_ReadStatus ();
+	if (status & P4_Reset)
+		return 1;
+	else
+		return 0;
+}//end of function GLCD_IsReset
+
+
+int
+GLCD_IsON ()
+{
+	return !GLCD_IsOFF ();
+}//end of function GLCD_IsON
+
+
+int
+GLCD_IsOFF ()
+{
+	char status;
+
+	status = GLCD_ReadStatus ();
+	if (status & P4_Status_On)
+		return 1;
+	else
+		return 0;
+}//end of function GLCD_IsOFF
+
+
+/*******************************************************************************
+ *
+ * functions to send commands and data to GLCD
+ *
+ ******************************************************************************/
+
+void
+Set_Xaddr (char x)
+{
+	char P2_cword, P4_cword;
+
+	///prepare control words
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword & (~P2_RS);		//clear RS bit
+	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
+	P4_cword = P4_Set_Xaddr_TMPL;
+	P4_cword = P4_cword | (x & 0x07);
+
+	///flush out control signals
+	while (GLCD_IsBusy());
+	GLCD_Write (P2_cword, P4_cword);
+}//end of function Set_Xaddr
 
 
 void
-LCD_ClearScreen ()
+Set_Yaddr (char y)
 {
-	LCD_SendCommand (0x01);
+	char P2_cword, P4_cword;
+
+	///prepare control words
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword & (~P2_RS);		//clear RS bit
+	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
+	P4_cword = P4_Set_Yaddr_TMPL;
+	P4_cword = P4_cword | (y & 0x3f);
+
+	///flush out control signals
+	while (GLCD_IsBusy());
+	GLCD_Write (P2_cword, P4_cword);
+}//end of function Set_Yaddr
+
+
+void
+Set_DisplayStartLine (char z)
+{
+	char P2_cword, P4_cword;
+
+	///prepare control words
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword & (~P2_RS);		//clear RS bit
+	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
+	P4_cword = P4_Set_Zaddr_TMPL;
+	P4_cword = P4_cword | (z & 0x3f);
+	///flush out control signals
+	while (GLCD_IsBusy());
+	GLCD_Write (P2_cword, P4_cword);
+}//end of function Set_DisplayStartLine
+
+
+void
+Send_Data (char pattern)
+{
+	char P2_cword, P4_cword;
+
+	///prepare control words
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword | (P2_RS);		//set RS bit
+	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
+	P4_cword = pattern;
+
+	///flush out control signals
+	while (GLCD_IsBusy());
+	GLCD_Write (P2_cword, P4_cword);
+}//end of function Send_Data
+
+void
+Set_DisplayOn (int mode)
+{
+	char P2_cword, P4_cword;
+
+	///prepare control words
+	//right
+	if (mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	//left
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword & (~P2_RS);		//set RS bit
+	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
+	P4_cword = P4_Set_Display_TMPL;
+	P4_cword = P4_cword | P4_Display_On;	//set display ON bit
+
+	///flush out control signals
+	while (GLCD_IsBusy());
+	GLCD_Write (P2_cword, P4_cword);
+}//end of function Set_DisplayOn
+
+
+void
+Set_DisplayOff ()
+{
+	char P2_cword, P4_cword;
+
+	///prepare control words
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword & (~P2_RS);		//set RS bit
+	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
+	P4_cword = P4_Set_Display_TMPL;
+	P4_cword = P4_cword & (~P4_Display_On);	//clear display ON bit
+
+	///flush out control signals
+	while (GLCD_IsBusy());
+	GLCD_Write (P2_cword, P4_cword);
+}//end of function Set_DisplayOff
+
+
+void
+GLCD_Reset ()
+{
+	char P2_cword, P4_cword;
+
+	set_GLCD_WriteMode ();
+
+	P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	P4_cword = 0;
+
+	P2_cword = P2_cword | P2_RST;		//set reset bit
+	GLCD_Write (P2_cword, P4_cword);
+
+	P2_cword = P2_cword & (~P2_RST);	//clear reset bit
+	GLCD_Write (P2_cword, P4_cword);
+
+	P2_cword = P2_cword | P2_RST;		//set reset bit
+	GLCD_Write (P2_cword, P4_cword);
+
+	while (GLCD_IsReset());
+}//end of function GLCD_Reset
+
+
+/*******************************************************************************
+ *
+ * Drawing functions that you implement
+ *
+ ******************************************************************************/
+
+const unsigned char DVD[2][32] = {
+{0x00, 0xF0, 0xFB, 0x3B, 0x83, 0x83, 0x83, 0x83, 0xE7, 0x7F, 0x3F, 0x03, 0x07, 0x7F, 0xF8, 0xC0,
+0xC0, 0x70, 0x1C, 0x0E, 0x07, 0xC3, 0xFB, 0x7B, 0x03, 0x03, 0x83, 0x83, 0xC6, 0x7E, 0x3C, 0x00 },
+{0x00, 0x21, 0x31, 0x71, 0x71, 0x51, 0x50, 0x50, 0x58, 0x58, 0x48, 0x78, 0xC8, 0xC8, 0xCB, 0x89,
+0x88, 0xC8, 0xC8, 0xC8, 0x78, 0x49, 0x59, 0x59, 0x59, 0x51, 0x51, 0x50, 0x70, 0x30, 0x20, 0x20 }
+};
+
+
+void draw(int mode) //mode 0 right, 1 left
+{
+	int i, x;
+	Set_DisplayStartLine (0);
+	Set_Yaddr (0);
+	x = 0;
+	Set_Xaddr (x);
+	if (!mode) { //draw right
+		for (i=16;i<32;i++)
+			Send_Data (DVD[x][i]);
+	}
+	for (i = 16; i < 64; i++)
+		Send_Data (0x00);
+	if (mode) { //draw left
+		for (i=0;i<16;i++)
+			Send_Data (DVD[x][i]);
+	}
+
+	Set_Xaddr (++x);
+	if (!mode) { //draw right
+		for (i=16;i<32;i++)
+			Send_Data (DVD[x][i]);
+	}
+	for (i = 16; i < 64; i++)
+		Send_Data (0x00);
+	if (mode) { //draw left
+		for (i=0;i<16;i++)
+			Send_Data (DVD[x][i]);
+	}
+
+	Set_Xaddr (++x);
+	for (i=0;i<64;i++)
+		Send_Data (0x00);
+
+	Set_Xaddr (++x);
+	for (i=0;i<64;i++)
+		Send_Data (0x00);
+
+	Set_Xaddr (++x);
+	for (i=0;i<64;i++)
+		Send_Data (0x00);
+
+	Set_Xaddr (++x);
+	for (i=0;i<64;i++)
+		Send_Data (0x00);
+
+	Set_Xaddr (++x);
+	for (i=0;i<64;i++)
+		Send_Data (0x00);
+
+	Set_Xaddr (++x);
+	for (i=0;i<64;i++)
+		Send_Data (0x00);
 }
 
 
-void Shutup_WatchDog (){
-	WDTCN = 0xde;
-	WDTCN = 0xad;
-}//end of function Shutup_WatchDog
+/*******************************************************************************
+ *
+ * the main drawing function
+ *
+ ******************************************************************************/
 
+main ()
+{
+	system_init_config ();
+	
+	GLCD_Reset ();
+	
+	//draw right
+	mode = 0;
+	Set_DisplayOn (mode);
+	draw(mode);	
 
-void main (){
-	//int i;
-	P1 = 0x00;
-	Shutup_WatchDog ();
-	LCD_PortConfig ();
-	LCD_Init ();
-	LCD_ClearScreen ();
-	P1 = 0xff;
-	for (j = 0; j < 16; j++){
-		array[j] = ' ';
-	}
-	while (1){
-		P2 = 0x00;
-		if( i < 16){
-			if(P2 == 128) {
-				LCD_SendData ('A');
-				array[i] = 'A';
-				i++;
-			} else if(P2 == 64){
-				LCD_SendData ('B');
-				array[i] = 'B';
-				i++;
-			} else if(P2 == 32){
-				LCD_SendData ('C');
-				array[i] = 'C';
-				i++;
-			} else if(P2 == 16){
-				LCD_ClearScreen ();
-				//LCD_PrintString (array);
-				for (j = 0; j < i ; j++){
-					LCD_SendData (array[j]);
-				}
-				LCD_SendCommand(0x00C0);
-				i = 0;
-			}
-		} else {
-			if(P2 == 16){
-				LCD_ClearScreen ();
-				//LCD_PrintString (array);
-				for (j = 0; j < i ; j++){
-					LCD_SendData (array[j]);
-				}
-				LCD_SendCommand(0x00C0);
-				i = 0;
-			}
-		}
-		//LCD_PrintString ("Hello World!!!");
-	}
-
+	//draw left
+	mode = 1;
+	Set_DisplayOn (mode);
+	draw(mode);	
+	
 	while (1);
-
-}
+}//end of function main
 ```
+<div style="break-after: page; page-break-after: always;"></div>
 
-#### `Lab05.c`
+#### `glcd.c`
 ```c
 #include "C8051F040.h"
-#include "LCD.h"
+#include "glcd.h"
+int mode, z_cur, y_cur;
+/*******************************************************************************
+ *
+ * functions for configuring the hardware
+ *
+ ******************************************************************************/
 
-char LCD_status;
-char array[2][16];
-int cur_x, cur_y;
-int a = 0;
-char k;
+void
+set_GLCD_WriteMode ()
+{
+	P4MDOUT = 0xff;
+}//end of function set_GLCD_WriteMode
 
-void button_detect (){
-	char key_hold;
-	int key_release;
-	int count;
-	int N = 50;
 
-	do {
-		key_hold = P2;
-	} while (!key_hold);
-	
-	//Stage 2: wait for key released
-	key_release = 0;
-	count = N;
-	while (!key_release) {
-		key_hold = P2;
-		if (key_hold) {
-			count = N;
-		} else {
-			count--;
-			if (count==0) key_release = 1;
-		}
-	}//Stage 2: wait for key released
-}//end of function button_detect ()
+void
+set_GLCD_ReadMode ()
+{
+	P4MDOUT = 0x00;
+	P4 = 0xff;
+}//end of function set_GLCD_ReadMode
 
-void LCD_PortConfig (){
+void
+system_init_config ()
+{
+	//turn-off the watch-dog timer
+	WDTCN = 0xde;
+	WDTCN = 0xad;
+
 	//initialize SFR setup page
-	SFRPAGE = CONFIG_PAGE;                 // Switch to configuration page
-	P2MDIN = 0xff;	
-	P2MDOUT = 0x00;
-	P1MDOUT = 0xff;
+	SFRPAGE = CONFIG_PAGE;		// Switch to configuration page
 
 	//setup the cross-bar and configure the I/O ports
 	XBR2 = 0xc0;
-	P3MDOUT = 0x3f;
+	P2MDOUT = 0xff;
+	P0MDOUT = 0xff;
+	//P1 input
+	P1MDOUT = 0xff;
+}//end of function system_init_config
+
+
+/*******************************************************************************
+ *
+ * functions to drive hardware signals
+ *
+ ******************************************************************************/
+
+void
+GLCD_delay ()
+{
+	int i;
+	for (i=0;i<10;i++);
+}//end of function GLCD_delay
+
+void
+GLCD_Write (char P2_cword, char P4_cword)
+{
+	char P2_cword_rep;
+
+	P2_cword_rep = P2_cword;
+	set_GLCD_WriteMode ();
+	GLCD_delay ();
+
+	P2_cword_rep = P2_cword_rep & (~P2_E);	//clear E bit
+	P2 = P2_cword_rep;
+	P4 = P4_cword;
+	GLCD_delay ();
+
+	P2_cword_rep = P2_cword_rep | P2_E;		//set E bit
+	P2 = P2_cword_rep;
+	GLCD_delay ();
+
+	P2_cword_rep = P2_cword_rep & (~P2_E);	//clear E bit
+	P2 = P2_cword_rep;
+	GLCD_delay ();
+	P0 = P2_cword_rep; // nien debug
 	
-	//set to normal mode
-	SFRPAGE = LEGACY_PAGE;
-}//end of function LCD_PortConfig ()
+}//end of function GLCD_Write
 
-/****************
-The delay_lcd seem to be not long enough. 
-Try to change the default value as 10000...
-****************/
-unsigned int delay_lcd=20000;
-
-void LCD_Delay (){
-	int i;
-	for (i=0;i<delay_lcd;i++); // wait for a long enough time...
-}
-
-void
-LCD_SendCommand (char cmd);
-
-void LCD_Init (){
-	LCD_SendCommand(0x02);        // Initialize as 4-bit mode
-	LCD_SendCommand (0x28);		//Display function: 2 rows for 4-bit data, small 
-	LCD_SendCommand (0x0e);		//display and curson ON, curson blink off
-	LCD_SendCommand (0x01);		//clear display, cursor to home
-	//LCD_SendCommand (0x10);		//cursor shift left
-	//LCD_SendCommand (0x06);		//cursor increment, shift off
-}
-
-void LCD_Status_SetRS (){
-	LCD_status = LCD_status | 1;
-}
-
-void
-LCD_Status_ClearRS ()
+char
+GLCD_Read (char P2_cword)
 {
-	LCD_status = LCD_status & 0xfe;
-}
+	char status;
+	char P2_cword_rep;
 
-void LCD_Status_SetWord (char word){
-	word = word & 0x0f;
-	LCD_status = LCD_status & 0x03;
-	LCD_status = LCD_status | (word<<2);
-}
+	P2_cword_rep = P2_cword;
+	set_GLCD_ReadMode ();
+	GLCD_delay ();
 
-void LCD_Status_SetEnable (){
-	LCD_status = LCD_status | 0x02;
-}
+	P2_cword_rep = P2_cword_rep & (~P2_E);		//clear E bit
+	P2 = P2_cword_rep;
+	GLCD_delay ();
+
+	P2_cword_rep = P2_cword_rep | P2_E;			//set E bit  
+	P2 = P2_cword_rep;
+	GLCD_delay ();
+
+	status = P4;
+
+	P2_cword_rep = P2_cword_rep & (~P2_E);		//clear E bit
+	P2 = P2_cword_rep;
+	GLCD_delay ();
+
+	return status;
+}//end of function GLCD_Read
 
 
-void LCD_Status_ClearEnable (){
-	LCD_status = LCD_status & 0xfd;
-}
+
+/*******************************************************************************
+ *
+ * GLCD read operations
+ *
+ ******************************************************************************/
+
+char
+GLCD_ReadStatus ()
+{
+	char P2_cword;
+	char status;
+
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword & (~P2_RS);
+	P2_cword = P2_cword | (P2_RW);
+	status = GLCD_Read (P2_cword);
+
+	return status;
+}//end of function GLCD_ReadStatus
 
 
-void LCD_SendCommand (char cmd){
-	LCD_Status_ClearRS ();
+char
+GLCD_ReadData ()
+{
+	char P2_cword;
+	char dat;
 
-	///send the higher half
-	LCD_Status_SetWord ((cmd>>4) & 0x0f);
-	LCD_Status_SetEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-	LCD_Status_ClearEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword | (P2_RS);
+	P2_cword = P2_cword | (P2_RW);
+	dat = GLCD_Read (P2_cword);
 
-	///send the lower half
-	LCD_Status_SetWord (cmd&0x0f);
-	LCD_Status_SetEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-	LCD_Status_ClearEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-}
+	return dat;
+}//end of function GLCD_ReadData
 
-void LCD_SendData (char dat){
-	LCD_Status_SetRS ();
+int
+GLCD_IsBusy ()
+{
+	char status;
 
-	///send the higher half
-	LCD_Status_SetWord ((dat>>4) & 0x0f);
-	LCD_Status_SetEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-	LCD_Status_ClearEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
+	status = GLCD_ReadStatus ();
+	if (status&P4_Busy)
+		return 1;
+	else
+		return 0;
+}//end of function GLCD_IsBusy
 
-	///send the lower half
-	LCD_Status_SetWord (dat&0x0f);
-	LCD_Status_SetEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-	LCD_Status_ClearEnable ();
-	P3 = LCD_status;
-	LCD_Delay ();
-}
 
-void LCD_PrintString (char* str){
-	int i;
+int
+GLCD_IsReset ()
+{
+	char status;
 
-	for (i=0; str[i]!=0; i++) {
-		LCD_SendData (str[i]);
-	}//for i
-}
+	status = GLCD_ReadStatus ();
+	if (status & P4_Reset)
+		return 1;
+	else
+		return 0;
+}//end of function GLCD_IsReset
+
+
+int
+GLCD_IsON ()
+{
+	return !GLCD_IsOFF ();
+}//end of function GLCD_IsON
+
+
+int
+GLCD_IsOFF ()
+{
+	char status;
+
+	status = GLCD_ReadStatus ();
+	if (status & P4_Status_On)
+		return 1;
+	else
+		return 0;
+}//end of function GLCD_IsOFF
+
+
+/*******************************************************************************
+ *
+ * functions to send commands and data to GLCD
+ *
+ ******************************************************************************/
+
+void
+Set_Xaddr (char x)
+{
+	char P2_cword, P4_cword;
+
+	///prepare control words
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword & (~P2_RS);		//clear RS bit
+	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
+	P4_cword = P4_Set_Xaddr_TMPL;
+	P4_cword = P4_cword | (x & 0x07);
+
+	///flush out control signals
+	while (GLCD_IsBusy());
+	GLCD_Write (P2_cword, P4_cword);
+}//end of function Set_Xaddr
 
 
 void
-LCD_ClearScreen ()
+Set_Yaddr (char y)
 {
-	LCD_SendCommand (0x01);
-}
+	char P2_cword, P4_cword;
+
+	///prepare control words
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword & (~P2_RS);		//clear RS bit
+	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
+	P4_cword = P4_Set_Yaddr_TMPL;
+	P4_cword = P4_cword | (y & 0x3f);
+
+	///flush out control signals
+	while (GLCD_IsBusy());
+	GLCD_Write (P2_cword, P4_cword);
+}//end of function Set_Yaddr
 
 
-void Shutup_WatchDog (){
-	WDTCN = 0xde;
-	WDTCN = 0xad;
-}//end of function Shutup_WatchDog
+void
+Set_DisplayStartLine (char z)
+{
+	char P2_cword, P4_cword;
 
-void jump_cursor(int x, int y) {
-	if (y) {LCD_SendCommand(0x00C0);}
-	else {LCD_SendCommand(0x0002);}
-	for (a = 0; a < x; a++) {
-		LCD_SendCommand(0x0014);
+	///prepare control words
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword & (~P2_RS);		//clear RS bit
+	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
+	P4_cword = P4_Set_Zaddr_TMPL;
+	P4_cword = P4_cword | (z & 0x3f);
+	///flush out control signals
+	while (GLCD_IsBusy());
+	GLCD_Write (P2_cword, P4_cword);
+}//end of function Set_DisplayStartLine
+
+
+void
+Send_Data (char pattern)
+{
+	char P2_cword, P4_cword;
+
+	///prepare control words
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword | (P2_RS);		//set RS bit
+	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
+	P4_cword = pattern;
+
+	///flush out control signals
+	while (GLCD_IsBusy());
+	GLCD_Write (P2_cword, P4_cword);
+}//end of function Send_Data
+
+void
+Set_DisplayOn (int mode)
+{
+	char P2_cword, P4_cword;
+
+	///prepare control words
+	//right
+	if (mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	//left
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword & (~P2_RS);		//set RS bit
+	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
+	P4_cword = P4_Set_Display_TMPL;
+	P4_cword = P4_cword | P4_Display_On;	//set display ON bit
+
+	///flush out control signals
+	while (GLCD_IsBusy());
+	GLCD_Write (P2_cword, P4_cword);
+}//end of function Set_DisplayOn
+
+
+void
+Set_DisplayOff ()
+{
+	char P2_cword, P4_cword;
+
+	///prepare control words
+	if(mode == 0)
+		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	else
+		P2_cword = P2_CWORD_TEMPLATE_LEFT;
+	P2_cword = P2_cword & (~P2_RS);		//set RS bit
+	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
+	P4_cword = P4_Set_Display_TMPL;
+	P4_cword = P4_cword & (~P4_Display_On);	//clear display ON bit
+
+	///flush out control signals
+	while (GLCD_IsBusy());
+	GLCD_Write (P2_cword, P4_cword);
+}//end of function Set_DisplayOff
+
+
+void
+GLCD_Reset ()
+{
+	char P2_cword, P4_cword;
+
+	set_GLCD_WriteMode ();
+
+	P2_cword = P2_CWORD_TEMPLATE_RIGHT;
+	P4_cword = 0;
+
+	P2_cword = P2_cword | P2_RST;		//set reset bit
+	GLCD_Write (P2_cword, P4_cword);
+
+	P2_cword = P2_cword & (~P2_RST);	//clear reset bit
+	GLCD_Write (P2_cword, P4_cword);
+
+	P2_cword = P2_cword | P2_RST;		//set reset bit
+	GLCD_Write (P2_cword, P4_cword);
+
+	while (GLCD_IsReset());
+}//end of function GLCD_Reset
+
+void GLCD_Clean() {
+	int i, x;
+	Set_DisplayStartLine (0);
+	Set_Yaddr (0);
+
+	for (x=0; x<8; x++) {
+		Set_Xaddr (x);
+		for (i=0;i<64;i++)
+			Send_Data (0x00);
 	}
 }
+/*******************************************************************************
+ *
+ * Drawing functions that you implement
+ *
+ ******************************************************************************/
 
-void insert_data(char c) {
-	LCD_SendData(c);
-	for (a = cur_x; a < 15; a++) {
-		k = array[cur_y][a+1];
-		array[cur_y][a+1] = array[cur_y][cur_x];
-		LCD_SendData(array[cur_y][a+1]);
-		array[cur_y][cur_x] = k;
-	}
-	array[cur_y][cur_x] = c;
-}
+const unsigned char DVD[2][32] = {
+{0x00, 0xF0, 0xFB, 0x3B, 0x83, 0x83, 0x83, 0x83, 0xE7, 0x7F, 0x3F, 0x03, 0x07, 0x7F, 0xF8, 0xC0,
+0xC0, 0x70, 0x1C, 0x0E, 0x07, 0xC3, 0xFB, 0x7B, 0x03, 0x03, 0x83, 0x83, 0xC6, 0x7E, 0x3C, 0x00 },
+{0x00, 0x21, 0x31, 0x71, 0x71, 0x51, 0x50, 0x50, 0x58, 0x58, 0x48, 0x78, 0xC8, 0xC8, 0xCB, 0x89,
+0x88, 0xC8, 0xC8, 0xC8, 0x78, 0x49, 0x59, 0x59, 0x59, 0x51, 0x51, 0x50, 0x70, 0x30, 0x20, 0x00 }
+};
 
-void main (){
-	P1 = 0x00;
-	Shutup_WatchDog ();
-	LCD_PortConfig ();
-	LCD_Init ();
-	LCD_ClearScreen ();
-	P1 = 0xff;
-	cur_x = 0;
-	cur_y = 0;
-	for (a = 0; a < 16; a++){
-		array[0][a] = ' ';
-		array[1][a] = ' ';
-	}
-	while (1){
-		P2 = 0x00;
-		// Insert A
-		if(P2 == 128) {
-			insert_data('A');
-			if (cur_x < 15) {
-				cur_x++;
-			}
-			jump_cursor(cur_x, cur_y);
-		// Insert B
-		} else if(P2 == 64){
-			insert_data('B');
-			if (cur_x < 15) {
-				cur_x++;
-			}
-			jump_cursor(cur_x, cur_y);
-		// Insert C
-		} else if(P2 == 32){
-			insert_data('C');
-			if (cur_x < 15) {
-				cur_x++;
-			}
-			jump_cursor(cur_x, cur_y);
 
-		// cursor left
-		} else if (P2 == 8) {
-			if (cur_x > 0) {
-				LCD_SendCommand(0x0010);
-				cur_x--;
-			}
-		// cursor right
-		} else if (P2 == 4) {
-			if (cur_x < 15) {
-				LCD_SendCommand(0x0014);
-				cur_x++;
-			}
-		// cursor up
-		} else if (P2 == 2) {
-			if (cur_y == 1) {
-				cur_y = 0;
-				jump_cursor(cur_x, cur_y);
-			}
-		// cursor down
-		} else if (P2 == 1) {
-			if (cur_y == 0) {
-				cur_y = 1;
-				jump_cursor(cur_x, cur_y);
-			}
+void draw(int mode, int z_in, int y_in) //mode 0 right, 1 left
+{
+	int i, x;
+	Set_DisplayStartLine (z_in);
+
+	for (x = 0; x < 2; x++) {
+		Set_Xaddr (x);
+
+		if (mode && y_in < 64) { //draw left
+			Set_Yaddr (y_in);
+			for (i=0;i < ((y_in > 32) ? 64 - y_in : 32);i++)
+				Send_Data (DVD[x][i]);
+		}
+
+		if (!mode && y_in > 32) { //draw right
+			Set_Yaddr((y_in < 64)? 0: y_in-64);
+			for (i = ((y_in > 63) ? 0 : 64 - y_in);i < 32;i++)
+				Send_Data (DVD[x][i]);
 		}
 	}
 }
+
+
+/*******************************************************************************
+ *
+ * the main drawing function
+ *
+ ******************************************************************************/
+
+main ()
+{
+	system_init_config ();
+	
+	GLCD_Reset ();
+	mode = 0;
+	GLCD_Clean();
+	mode = 1;
+	GLCD_Clean();
+
+	P1 = 0x00;
+	z_cur = 0;
+	y_cur = 48;
+	while(1){
+		if(P1 == 1) z_cur++;
+		if(P1 == 2) z_cur--;
+		if(P1 == 4 && y_cur < 96) y_cur++;
+		if(P1 == 8 && y_cur >0) y_cur--;
+		//draw right
+		mode = 0;
+		Set_DisplayOn (mode);
+		draw(mode, z_cur, y_cur);	
+
+		//draw left
+		mode = 1;
+		Set_DisplayOn (mode);
+		draw(mode, z_cur, y_cur);
+	}
+}//end of function main
 ```
