@@ -378,7 +378,7 @@ const unsigned char pacman_down[8] = {0x00, 0x78, 0x3c, 0x1e, 0x1e, 0x3c, 0x78, 
 {0x00, 0x01, 0x07, 0x0F, 0x1F, 0x1F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x1F, 0x0F, 0x07, 0x01, 0x00}};*/
 
 
-const unsigned char food[2] = {0xC0, 0xC0};
+//const unsigned char food[2] = {0xC0, 0xC0};
 const unsigned char gold_food[4] = {0x60, 0xFF, 0xFF, 0x60};
 
 
@@ -388,20 +388,40 @@ void generatefood(int foodmode){
 }
 
 void drawfood(){
-	int i, x, y;
-	Set_DisplayStartLine (x);
+	int x, y;
+	int food = 0x03;
+	x = food_x, y = food_y;
+	
+	// check page
+	Set_Xaddr(x/8);
 
+	// set side and y address
 	Set_DisplayOn ((mode = (y > 64))? 1 : 0); 
 	Set_Yaddr (y);	
 	
-	Send_Data(food[0]);
+	// determine which level on current x page
+	for (int i = 0; i <= x%8; i++) {
+		food *= 2;
+	}
 
+	// check for swap page (overflow)
+	if (food > 0xc0) food = 0x80;
+	
+	Send_Data(food);
+
+	// check for page swap and swap page
+	if (food == 0x80) {
+		food = 0x01;
+		Set_Xaddr(x/8 + 1);
+	}
+
+	// change side
 	if (food_y == 63) {
 		Set_DisplayOn(1);
 		Set_Yaddr(0);
 	}
 
-	Send_Data(food[1]);
+	Send_Data(food);
 }
 
 
@@ -414,7 +434,7 @@ void draw(int mode, int z_in, int y_in, int status) //mode 0 right, 1 left
 	Set_DisplayStartLine (z_in);
 	if(status == 1 || 2) pacman = pacman_right;
 	if(status == 3 || 4) pacman = pacman_down;
-		Set_Xaddr (1);
+		Set_Xaddr (0);
 
 		if (mode && y_in < 64) { //draw left
 			Set_Yaddr (y_in);
