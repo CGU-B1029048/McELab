@@ -402,18 +402,17 @@ void drawfood(){
 	// determine which level on current x page
 	for (int i = 0; i <= x%8; i++) {
 		food *= 2;
+		// check for swap page (overflow)
+		if (food > 0xc0) food = 0x80;
 	}
-
-	// check for swap page (overflow)
-	if (food > 0xc0) food = 0x80;
-	
 	Send_Data(food);
 
-	// check for page swap and swap page
-	if (food == 0x80) {
-		food = 0x01;
+	// x_page overflow print at next page
+	if (food = 0x80) {
 		Set_Xaddr(x/8 + 1);
-	}
+		Send_Data(0x01);
+		Set_Xaddr(x/8);
+	} 
 
 	// change side
 	if (food_y == 63) {
@@ -422,6 +421,8 @@ void drawfood(){
 	}
 
 	Send_Data(food);
+	// print last bit of overflow
+	if (food == 0x80) Send_Data(0x01);
 }
 
 
