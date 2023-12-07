@@ -384,6 +384,7 @@ const unsigned char gold_food[4] = {0x60, 0xFF, 0xFF, 0x60};
 
 void generatefood(int foodmode){
   food_x = rand() % 64;
+  if (food_x % 8 == 7) food_x - 1;
   food_y = rand() % (128 - foodmode*2);
 }
 
@@ -402,27 +403,17 @@ void drawfood(){
 	// determine which level on current x page
 	for (int i = 0; i <= x%8; i++) {
 		food *= 2;
-		// check for swap page (overflow)
-		if (food > 0xc0) food = 0x80;
 	}
 	Send_Data(food);
-
-	// x_page overflow print at next page
-	if (food = 0x80) {
-		Set_Xaddr(x/8 + 1);
-		Send_Data(0x01);
-		Set_Xaddr(x/8);
-	} 
 
 	// change side
 	if (food_y == 63) {
 		Set_DisplayOn(1);
-		Set_Yaddr(0);
+		y = 0;
+		Set_Yaddr(y);
 	}
 
 	Send_Data(food);
-	// print last bit of overflow
-	if (food == 0x80) Send_Data(0x01);
 }
 
 
