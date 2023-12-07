@@ -3,8 +3,8 @@
 //#include <stdio.h>
 #include <stdlib.h>
 int mode, z_cur, y_cur;
-//int food_x, food_y;
-//int goldfood_x = 1, goldfood_y = 1;
+int food_x, food_y;
+int goldfood_x = 1, goldfood_y = 1;
 int status = 1;//right
 /*******************************************************************************
  *
@@ -377,7 +377,7 @@ const unsigned char pacman_down[8] = {0x00, 0x78, 0x3c, 0x1e, 0x1e, 0x3c, 0x78, 
 {{0x00, 0xC0, 0xF8, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0xC0, 0xE0, 0xF0, 0xC8, 0x8C, 0xF8, 0xC0, 0x00},
 {0x00, 0x01, 0x07, 0x0F, 0x1F, 0x1F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x1F, 0x0F, 0x07, 0x01, 0x00}};*/
 
-/*
+
 const unsigned char food[2] = {0xC0, 0xC0};
 const unsigned char gold_food[4] = {0x60, 0xFF, 0xFF, 0x60};
 
@@ -387,25 +387,22 @@ void generatefood(int foodmode){
   food_y = rand() % (128 - foodmode*2);
 }
 
-void drawfood(int foodmode){
+void drawfood(){
 	int i, x, y;
-	x = (foodmode > 1)? goldfood_x: food_x;
-	y = (foodmode > 1)? goldfood_y: food_y;
 	Set_DisplayStartLine (x);
 
 	Set_DisplayOn ((mode = (y > 64))? 1 : 0); 
 	Set_Yaddr (y);	
 	
-	for (i=0;i< (y < 64 && y > 64 - foodmode*2)? 64-y: foodmode*2;i++){
-		Send_Data (food[i]);
+	Send_Data(food[0]);
+
+	if (food_y == 63) {
+		Set_DisplayOn(1);
+		Set_Yaddr(0);
 	}
 
-	if(y < 64 && y > 64 - foodmode*2){
-		Set_DisplayOn (1);
-		for(i = 1; i < y + foodmode*2 -64; i++)
-			Send_Data (i);
-	}
-}*/
+	Send_Data(food[1]);
+}
 
 
 
