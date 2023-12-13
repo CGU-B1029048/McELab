@@ -35,9 +35,9 @@ void system_init_config (){
 	P2MDOUT = 0xff;
 	P0MDOUT = 0xff;
 	//P1 input
-	P1MDOUT = 0xff;
+	P1MDIN = 0xff;
 	//score
-	P1MDOUT = 0xff;
+	P3MDOUT = 0xff;
 }//end of function system_init_config
 
 
@@ -478,6 +478,7 @@ int main (){
 	mode = 1;
 	GLCD_Clean();
 
+	P0 = 0xff;
 	P1 = 0x00;
 	P3 = 0x00;//score
 	x_cur = 1;
@@ -486,6 +487,7 @@ int main (){
 	generatefood();
 	drawfood();
 	while(1){
+		if (P0 == 0x00) P0 = 0xff;
 		if(x_cur == food_x && y_cur == food_y){
 			P3++;
 			generatefood();
@@ -507,6 +509,7 @@ int main (){
 		move_pacman(pac_status);
 		draw(x_cur, y_cur);	
 		GLCD_delay();
+		P0--;
 	}
 }//end of function main
 
