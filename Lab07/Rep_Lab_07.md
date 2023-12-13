@@ -2,7 +2,7 @@
 
 - [Microcontroller Experiment Lab07 Report](#microcontroller-experiment-lab07-report)
 	- [Problem Description](#problem-description)
-	- [Theory Explaination](#theory-explaination)
+	- [Theory Explanation](#theory-explanation)
 	- [Code \& Explanation](#code--explanation)
 		- [Basic](#basic)
 			- [Pin define](#pin-define)
@@ -15,7 +15,7 @@
 			- [Main Function Initialize](#main-function-initialize)
 			- [Main Function - Cursor Movement](#main-function---cursor-movement)
 	- [Difficulties Encountered and Solutions](#difficulties-encountered-and-solutions)
-	- [Disscussion](#disscussion)
+	- [Discussion](#discussion)
 	- [Appendix](#appendix)
 		- [Full code](#full-code)
 			- [`lab05_basic.c`](#lab05_basicc)
@@ -35,20 +35,21 @@
     + Bonus: include the discussion of the previous two Q’s
 <div style="break-after: page; page-break-after: always;"></div>
 
-## Theory Explaination
+## Theory Explanation
 To count the frequency and Time for ISR, formula is shown as following.
 $$ T = \frac{1}{f} $$
 When we set the ISR frequency as T and set it to ring the buzzer, The buzzer will make sound with frequency $f$.
 
 The 8051 board has a Oscillator cycle of 24.5MHz, With Timer mode 0 or 1, the timer will 除頻 by 12 and divide 1 (8 by default) to roughly 2MHz, cycle time of 0.5 $\mu$s
 
-if we set `0xffec = (TH_0, TL_0)` $\rightarrow$ 20 cycle per 1 ISR, 
+if we set `0xffec = (TH_0, TL_0)` $\rightarrow$ 20 cycle (`0xffff - 0xffec` = 20) per 1 ISR, 
 $$24.5 \times 10^6 \text{(Hz)} \div 12 \div 1 = f\approx 2\times 10^6 $$
 $$T = 1/f \approx 5 \times 10^{-7} \text{(s)} = 0.5 (\mu s)$$
 $$20 \times 0.5 = 10 (\mu s) = 0.01 (ms)$$
 so we get roughly 0.01ms for 1 ISR cycle, which 100000 ISR cycle is a second.
 
 Then we get frequency of notes show as below.
+
 | Note | 簡譜 | Frequency (Hz) |
 |---|---|---|
 | Do | 1 | 261.63 |
@@ -59,11 +60,12 @@ Then we get frequency of notes show as below.
 | La | 6 | 440 |
 | Si | 7 | 493.88 |
 | 高音Do | 1^ | 523.25 |
-So wwe get the frequency of the note $f_{notes}$, we which means the buzzer must give $f_{notes}$ pulses. So we got the following formula for pulses generation.
-$$T = \frac{1}{2} \times \frac{1}{f_{notes}}$$
-note: T get divided by 2 since a pulse cycle is on $\rightarrow$ off $\rightarrow$ on, 2 operation.
 
-But the board has bug so actually 50000 ISR cycle is 1 second. Our setting at.
+So we get the frequency of the note $f_{notes}$, we which means the buzzer must give $f_{notes}$ pulses in 1 second. So we can get the cycle time $T$ from following formula for pulses generation.
+$$T = \frac{1}{2} \times \frac{1}{f_{notes}}$$
+note: T get divided by 2 since a pulse cycle is on $\rightarrow$ off $\rightarrow$ on, 2 signal sent in one cycle.
+
+But the board has bug so actually 50000 ISR cycle per 1 second. So we just use 50000 ISR cycle for 1 second in this lab, we have found out the reason of it, which will explain in [[#Difficulties Encountered and Solutions]].
 
 ## Code & Explanation
 We divide the Problem into 3 files to implement, `lab07_basic.c`, `Lab07_b1.c`.
@@ -122,7 +124,7 @@ First is the Board Problem. Maybe our luck is too good, we have already meet a l
 Later, wehn we are making our bonus 1, we encounter an overflow at line changing at demo. When pressed over 16 time from 0, the character will disappear at LCD and after 24 times it will display in the second row. We thus go and redesign our code. We come out with a solution by resrict our data length, which limit them in only 16 characters, thus solve the problem.
 Finally, When we working on bonus 2, while inserting data at the cursor position, the LCD always cannot display correct characters behind insert data. Which caused us a lot of time debugging. After we ask the professor and TA, we found out is our code's logic has flaw. We then rewrite our `insert_data()` function, which solved our problem.
 
-## Disscussion
+## Discussion
 After this Lab, I've understand more about how to program the LCD in C with 8051 board. I've also learn how to position the cursor with C, and how inserting a character might take to display it. We were used to typing and inserting word in program such as word or VScode, even terminal. They've written these function already so we don't need to worry for it. By this Lab, I've understand more about the control of it. But the most of it is, again, our 8051 board. We've almost encountered failure board every time in lab recently, and struggled for so long to find our is the board have problem. Hope next Lab we can be free from the cycle of getting failure boards.
 
 <div style="break-after: page; page-break-after: always;"></div>

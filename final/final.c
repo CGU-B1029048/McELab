@@ -388,7 +388,8 @@ void draw(int mode, int x_in, int y_in) //mode 0 right, 1 left
 	if(pac_status == 3 || 4) pacman = pacman_up;
 	
 	Set_Xaddr(x_in);
-	Set_Yaddr(y_in * 8);
+	Set_Yaddr((y_in%8) * 8);
+	Set_DisplayOn(y_in/8);
 
 	for (i = 0; i < 8; i++) {
 		if (pac_status == 2)
