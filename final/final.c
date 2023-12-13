@@ -354,11 +354,9 @@ void drawfood(){
 	//int i;
 	int food = 0x18;
 	
-	Set_Xaddr(food_x);
-
 	// set side and y address
-
 	Set_DisplayOn ((mode = (food_y > 7))? 1 : 0); //right:left
+	Set_Xaddr(food_x);
 	Set_Yaddr (food_y*8);	
 	
 	// determine which level on current x page
@@ -439,8 +437,7 @@ void draw(int x_in, int y_in) { //mode 0 right, 1 left
 	Set_DisplayOn(mode);
 
 	Set_Xaddr(x_in);
-	Set_Yaddr((y_in%8) * 8);
-	Set_DisplayOn(y_in/8);
+	Set_Yaddr(y_in * 8);
 
 	for (i = 0; i < 8; i++) {
 		if (pac_status == 2){
