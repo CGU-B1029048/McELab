@@ -49,7 +49,7 @@ void system_init_config (){
 
 void GLCD_delay (){
 	int i;
-	for (i=0;i<300;i++);
+	for (i=0;i<500;i++);
 }//end of function GLCD_delay
 
 void GLCD_Write (char P2_cword, char P4_cword){
@@ -357,12 +357,13 @@ void drawfood(){
 	// set side and y address
 	Set_DisplayOn ((mode = (food_y > 7))? 1 : 0); //right:left
 	Set_Xaddr(food_x);
-	Set_Yaddr (food_y*8);	
+	Set_Yaddr (food_y*8+3);	
 	
 	// determine which level on current x page
 	/*for (i = 0; i <= food_x; i++) {
 		food *= 2;
 	}*/
+	Send_Data(food);
 	Send_Data(food);
 
 }
