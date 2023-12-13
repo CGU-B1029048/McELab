@@ -2,7 +2,7 @@
 #include "glcd.h"
 //#include "LCD.h"
 #include <stdlib.h>
-int mode, z_cur, y_cur;
+int mode, x_cur, y_cur;
 int food_x, food_y;
 int goldfood_x = 1, goldfood_y = 1;
 int pac_status;//right
@@ -36,6 +36,8 @@ void system_init_config (){
 	P0MDOUT = 0xff;
 	//P1 input
 	P1MDOUT = 0xff;
+	//score
+	P1MDOUT = 0xff;
 }//end of function system_init_config
 
 
@@ -47,7 +49,7 @@ void system_init_config (){
 
 void GLCD_delay (){
 	int i;
-	for (i=0;i<200;i++);
+	for (i=0;i<300;i++);
 }//end of function GLCD_delay
 
 void GLCD_Write (char P2_cword, char P4_cword){
@@ -340,61 +342,110 @@ void GLCD_Clean() {
 const unsigned char pacman_right[8] = {0x00,0x38, 0x7c, 0xfe, 0xee, 0xc6, 0x82, 0x00};
 const unsigned char pacman_up[8] = {0x00, 0x78, 0x3c, 0x1e, 0x1e, 0x3c, 0x78, 0x00};
 //const unsigned char food[2] = {0xC0, 0xC0};
-const unsigned char gold_food[4] = {0x60, 0xFF, 0xFF, 0x60};
+//const unsigned char gold_food[4] = {0x60, 0xFF, 0xFF, 0x60};
 
 
-void generatefood(int foodmode){
-  food_x = rand() % 64;
-  if (food_x % 8 == 7 || food_x % 8 == 0) food_x - 1;
-  food_y = rand() % (128 - foodmode*2);
+void generatefood(){
+  food_x = rand() % 8;//0~7
+  food_y = rand() % 16;//0~15
 }
 
 void drawfood(){
-	int i, x, y;
-	int food = 0x03;
-	x = food_x, y = food_y;
+	//int i;
+	int food = 0x18;
 	
-	// check page
-	Set_Xaddr(x/8);
+	Set_Xaddr(food_x);
 
 	// set side and y address
-	Set_DisplayOn ((mode = (y > 64))? 1 : 0); 
-	Set_Yaddr (y);	
+
+	Set_DisplayOn ((mode = (food_y > 7))? 1 : 0); //right:left
+	Set_Yaddr (food_y*8);	
 	
 	// determine which level on current x page
-	for (i = 0; i <= x%8; i++) {
+	/*for (i = 0; i <= food_x; i++) {
 		food *= 2;
-	}
+	}*/
 	Send_Data(food);
 
-	// change side
-	if (food_y == 63) {
-		Set_DisplayOn(1);
-		y = 0;
-		Set_Yaddr(y);
-	}
-
-	Send_Data(food);
 }
 
-
-
-
-void draw(int mode, int x_in, int y_in) //mode 0 right, 1 left
-{
-	unsigned char* pacman;
+void clean_pacman(int x_in, int y_in){
 	int i;
-	if(pac_status == 1 || 2) pacman = pacman_right;
-	if(pac_status == 3 || 4) pacman = pacman_up;
+	if(y_in > 7) mode = 0;//right
+	else mode = 1;//left
 	
+	if (pac_status == 1) {//right
+		Set_Xaddr(x_in);
+		if (y_in < 16) {
+			if (y_in <= 8) {
+				mode = 1;;
+				for (i = 0; i < 8; i++){
+					Send_Data(0x00);
+				}
+			}
+			Set_DisplayOn(mode);
+			Set_Yaddr((y_in - 1) * 8);
+			for (i = 0; i < 8; i++){
+				Send_Data(0x00);
+			}
+		}
+	}
+	if (pac_status == 2) {//left
+		Set_Xaddr(x_in);
+		if (y_in >= 0) {
+			if (y_in >= 7) {
+				mode = 0;
+			}
+			Set_DisplayOn(mode);
+			Set_Yaddr((y_in + 1) * 8);
+			for (i = 0; i < 8; i++){
+				Send_Data(0x00);
+			}
+		} 
+	}
+	if (pac_status == 3) {//up
+		if (x_in < 8) {
+			Set_DisplayOn(mode);
+			Set_Yaddr((y_in) * 8);
+			Set_Xaddr(x_in + 1);
+			for (i = 0; i < 8; i++){
+				Send_Data(0x00);
+			}
+		}
+	}
+	if (pac_status == 4) {//down
+		if (x_in > 0) {
+			Set_DisplayOn(mode);
+			Set_Yaddr((y_in) * 8);
+			Set_Xaddr(x_in - 1);
+			for (i = 0; i < 8; i++){
+				Send_Data(0x00);
+			}
+		}
+	}
+}
+
+void draw(int x_in, int y_in) { //mode 0 right, 1 left
+	const unsigned char* pacman;
+	int i;
+	
+	if(pac_status == 1 || pac_status == 2) pacman = pacman_right;
+	if(pac_status == 3 || pac_status == 4) pacman = pacman_up;
+	// begin erase
+	clean_pacman(x_in, y_in);
+
+	if(y_in > 7) mode = 0;
+	else mode = 1;
+	Set_DisplayOn(mode);
+
 	Set_Xaddr(x_in);
 	Set_Yaddr((y_in%8) * 8);
 	Set_DisplayOn(y_in/8);
 
 	for (i = 0; i < 8; i++) {
-		if (pac_status == 2)
+		if (pac_status == 2){
 			Send_Data (pacman[7-i]);
-		else if (pac_status == 3){
+		}else if (pac_status == 3){
 			if(pacman[i] != 0)
 				Send_Data (pacman[((i+3)%6)? (i+3)%6: 6]);
 			else 
@@ -403,40 +454,14 @@ void draw(int mode, int x_in, int y_in) //mode 0 right, 1 left
 			Send_Data (pacman[i]);
 	}
 
-	// begin erase
-	if (pac_status == 1) {
-		if (y_in < 15) {
-			Set_Yaddr((y_in - 1) * 8);
-			for (i = 0; i < 8; i++) Send_Data(0x00);
-		}
-	}
-	if (pac_status == 2) {
-		if (y_in > 0) {
-			Set_Yaddr((y_in + 1) * 8);
-			for (i = 0; i < 8; i++) Send_Data(0x00);
-		}
-	}
-	if (pac_status == 3) {
-		if (x_in < 8) {
-			Set_Yaddr((y_in) * 8);
-			Set_Xaddr(x_in - 1);
-			for (i = 0; i < 8; i++) Send_Data(0x00);
-		}
-	}
-	if (pac_status == 4) {
-		if (x_in > 0) {
-			Set_Yaddr((y_in) * 8);
-			Set_Xaddr(x_in + 1);
-			for (i = 0; i < 8; i++) Send_Data(0x00);
-		}
-	}
 }
 
+
 void move_pacman(int pac_status) {
-	if(pac_status == 1 && y_cur < 120) y_cur++;
-	else if (pac_status == 2 && y_cur > 0) y_cur--;
-	else if (pac_status == 3 && z_cur > 8) z_cur--;
-	else if (pac_status == 4 && z_cur < 63) z_cur++;
+	if (pac_status == 1 && y_cur < 15) y_cur++;//right
+	else if (pac_status == 2 && y_cur > 0) y_cur--;//left
+	else if (pac_status == 3 && x_cur > 0) x_cur--;//up
+	else if (pac_status == 4 && x_cur < 7) x_cur++;//down
 	GLCD_delay();
 }
 
@@ -446,8 +471,7 @@ void move_pacman(int pac_status) {
  *
  ******************************************************************************/
 
-int main ()
-{
+int main (){
 	system_init_config ();
 	
 	GLCD_Reset ();
@@ -457,40 +481,32 @@ int main ()
 	GLCD_Clean();
 
 	P1 = 0x00;
-	z_cur = 32;
-	y_cur = 48;
-	pac_status = 4;
-	
+	P3 = 0x00;//score
+	x_cur = 1;
+	y_cur = 6;
+	pac_status = 1;
+	generatefood();
+	drawfood();
 	while(1){
-		if(P1 == 1){//up
-			//z_cur++;
-			pac_status = 4;
-		} else if(P1 == 2){//down
-			//z_cur--;
+		if (P1 == 1){//up
 			pac_status = 3;
+		} else if(P1 == 2){//down
+			pac_status = 4;
 		} else if(P1 == 4){
-			//y_cur++;
 			pac_status = 1;//right
 		} else if(P1 == 8){
-			//y_cur--;
 			pac_status = 2;//left
-		} else if(P1 == 16){
-			generatefood(1);
+		} /*else if(P1 == 16){
+			generatefood();
+			drawfood();
+		}*/
+		move_pacman(pac_status);
+		draw(x_cur, y_cur);	
+		if(x_cur == food_x && y_cur == food_y){
+			P3++;
+			generatefood();
 			drawfood();
 		}
-		move_pacman(pac_status);
-		//draw right
-		mode = 0;
-		Set_DisplayOn (mode);
-		draw(mode, z_cur, y_cur);	
-
-		//draw left
-		mode = 1;
-		Set_DisplayOn (mode);
-		draw(mode, z_cur, y_cur);
-
-		//GLCD_delay();
-
 	}
 }//end of function main
 
