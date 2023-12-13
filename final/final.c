@@ -486,6 +486,12 @@ int main (){
 	generatefood();
 	drawfood();
 	while(1){
+		if(x_cur == food_x && y_cur == food_y){
+			P3++;
+			generatefood();
+			drawfood();
+		}
+
 		if (P1 == 1){//up
 			pac_status = 3;
 		} else if(P1 == 2){//down
@@ -500,11 +506,7 @@ int main (){
 		}*/
 		move_pacman(pac_status);
 		draw(x_cur, y_cur);	
-		if(x_cur == food_x && y_cur == food_y){
-			P3++;
-			generatefood();
-			drawfood();
-		}
+		GLCD_delay();
 	}
 }//end of function main
 
