@@ -3,6 +3,7 @@
 //#include "LCD.h"
 #include <stdlib.h>
 int mode, x_cur, y_cur;
+int ghost_x, ghost_y;
 int food_x, food_y;
 int goldfood_x, goldfood_y;
 int pac_status, speed;
@@ -466,6 +467,21 @@ void draw(int x_in, int y_in) { //mode 0 right, 1 left
 
 }
 
+void draw_ghost() {
+	// Set page and address
+	mode = (ghost_y > 7) ? 0 : 1;
+	Set_DisplayOn(mode);
+	Set_Xaddr(ghost_x);
+	Set_Yaddr(ghost_y*8+1);
+
+	// draw ghost
+	Send_Data(0x3c);
+	Send_Data(0x6e);
+	Send_Data(0x7c);
+	Send_Data(0x7c);
+	Send_Data(0x6e);
+	Send_Data(0x3c);
+}
 
 void move_pacman(int pac_status) {
 	if (pac_status == 1 && y_cur < 15) y_cur++;//right
@@ -495,6 +511,8 @@ int main (){
 	P6 = 0xff;
 	x_cur = 1;
 	y_cur = 6;
+	ghost_x = 6;
+	ghost_y = 8;
 	pac_status = 1;
 	generatefood(0);
 	drawfood(0);
@@ -514,7 +532,19 @@ int main (){
 			speed = (speed == 500)? 300: 500;
 		}
 		move_pacman(pac_status);
-		draw(x_cur, y_cur);	
+		draw(x_cur, y_cur);
+		draw_ghost();
+
+		// check if ghost eat food 
+		if(ghost_x == food_x && ghost_y == food_y){
+			generatefood(0);
+			drawfood(0);
+		}
+		if(ghost_x == goldfood_x && ghost_y == goldfood_y){
+			generatefood(1);
+			drawfood(1);
+		}
+		// check if pacman eat food
 		if(x_cur == food_x && y_cur == food_y){
 			P3++;
 			generatefood(0);
@@ -525,6 +555,16 @@ int main (){
 			generatefood(1);
 			drawfood(1);
 		}
+		// check if ghost touch pacman, if so, die 
+		if (ghost_x == x_cur && ghost_y == y_cur) {
+			break;
+		}
 		GLCD_delay(speed);
+	}
+	// Game over
+	P3 = 0xff;
+	while (1) {
+		P3 = ~P3;
+		for (int i = 0; i < 100; i++) ;
 	}
 }//end of function main
