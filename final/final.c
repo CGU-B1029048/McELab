@@ -4,8 +4,8 @@
 #include <stdlib.h>
 int mode, x_cur, y_cur;
 int food_x, food_y;
-int goldfood_x = 1, goldfood_y = 1;
-int pac_status;//right
+int goldfood_x, goldfood_y;
+int pac_status, speed;
 /*******************************************************************************
  *
  * functions for configuring the hardware
@@ -48,9 +48,9 @@ void system_init_config (){
  *
  ******************************************************************************/
 
-void GLCD_delay (){
+void GLCD_delay (int speed){
 	int i;
-	for (i=0;i<500;i++);
+	for (i=0;i<speed;i++);
 }//end of function GLCD_delay
 
 void GLCD_Write (char P2_cword, char P4_cword){
@@ -58,20 +58,20 @@ void GLCD_Write (char P2_cword, char P4_cword){
 
 	P2_cword_rep = P2_cword;
 	set_GLCD_WriteMode ();
-	GLCD_delay ();
+	GLCD_delay (speed);
 
 	P2_cword_rep = P2_cword_rep & (~P2_E);	//clear E bit
 	P2 = P2_cword_rep;
 	P4 = P4_cword;
-	GLCD_delay ();
+	GLCD_delay (speed);
 
 	P2_cword_rep = P2_cword_rep | P2_E;		//set E bit
 	P2 = P2_cword_rep;
-	GLCD_delay ();
+	GLCD_delay (speed);
 
 	P2_cword_rep = P2_cword_rep & (~P2_E);	//clear E bit
 	P2 = P2_cword_rep;
-	GLCD_delay ();
+	GLCD_delay (speed);
 	P0 = P2_cword_rep; // nien debug
 	
 }//end of function GLCD_Write
@@ -82,21 +82,21 @@ char GLCD_Read (char P2_cword){
 
 	P2_cword_rep = P2_cword;
 	set_GLCD_ReadMode ();
-	GLCD_delay ();
+	GLCD_delay (speed);
 
 	P2_cword_rep = P2_cword_rep & (~P2_E);		//clear E bit
 	P2 = P2_cword_rep;
-	GLCD_delay ();
+	GLCD_delay (speed);
 
 	P2_cword_rep = P2_cword_rep | P2_E;			//set E bit  
 	P2 = P2_cword_rep;
-	GLCD_delay ();
+	GLCD_delay (speed);
 
 	status = P4;
 
 	P2_cword_rep = P2_cword_rep & (~P2_E);		//clear E bit
 	P2 = P2_cword_rep;
-	GLCD_delay ();
+	GLCD_delay (speed);
 
 	return status;
 }//end of function GLCD_Read
@@ -342,15 +342,15 @@ void GLCD_Clean() {
 const unsigned char pacman_right[8] = {0x00,0x38, 0x7c, 0xfe, 0xee, 0xc6, 0x82, 0x00};
 const unsigned char pacman_up[8] = {0x00, 0x78, 0x3c, 0x1e, 0x1e, 0x3c, 0x78, 0x00};
 //const unsigned char food[2] = {0xC0, 0xC0};
-//const unsigned char gold_food[4] = {0x60, 0xFF, 0xFF, 0x60};
+//const unsigned char gold_food[4] = {0x18, 0x3C, 0x3C, 0x18};
 
-// generate food positions, 0 for food, 1 for goldfood
-void generatefood(int foodmode){ 
+
+void generatefood(int foodmode){
 	do{
-		if (!foodmode) {
+		if(!foodmode){//0
 			food_x = rand() % 8;//0~7
 			food_y = rand() % 16;//0~15
-		} else {
+		} else {//1
 			goldfood_x = rand() % 8;//0~7
 			goldfood_y = rand() % 16;//0~15
 		}
@@ -358,16 +358,13 @@ void generatefood(int foodmode){
 }
 
 void drawfood(int foodmode){
-	//int i;
 	int food = 0x18;
-	int gold_food = 0x3c;
-
-	// setup positions
-	int x = (foodmode) ? goldfood_x : food_x;
-	int y = (foodmode) ? goldfood_y : food_y;
-	
+	int gold_food = 0x3C;
+	int x ,y; 
+	x = (foodmode)?  goldfood_x:food_x;
+	y = (foodmode)?  goldfood_y: food_y;
 	// set side and y address
-	mode = (food_y > 7) ? 0 : 1;
+	mode = (y > 7) ? 0 : 1;
 
 	// set drawing position
 	Set_DisplayOn (mode); //right:left
@@ -381,7 +378,6 @@ void drawfood(int foodmode){
 		Send_Data(gold_food);
 	}
 	Send_Data(food);
-
 }
 
 void clean_pacman(int x_in, int y_in){
@@ -476,7 +472,7 @@ void move_pacman(int pac_status) {
 	else if (pac_status == 2 && y_cur > 0) y_cur--;//left
 	else if (pac_status == 3 && x_cur > 0) x_cur--;//up
 	else if (pac_status == 4 && x_cur < 7) x_cur++;//down
-	GLCD_delay();
+	GLCD_delay(speed);
 }
 
 /*******************************************************************************
@@ -500,8 +496,11 @@ int main (){
 	x_cur = 1;
 	y_cur = 6;
 	pac_status = 1;
-	generatefood();
-	drawfood();
+	generatefood(0);
+	drawfood(0);
+	generatefood(1);
+	drawfood(1);
+	speed = 500;
 	while(1){
 		if (P1 == 1){//up
 			pac_status = 3;
@@ -511,14 +510,21 @@ int main (){
 			pac_status = 1;//right
 		} else if(P1 == 8){
 			pac_status = 2;//left
+		} else if(P1 == 16){
+			speed = (speed == 500)? 300: 500;
 		}
 		move_pacman(pac_status);
 		draw(x_cur, y_cur);	
 		if(x_cur == food_x && y_cur == food_y){
 			P3++;
-			generatefood();
-			drawfood();
+			generatefood(0);
+			drawfood(0);
 		}
-		GLCD_delay();
+		if(x_cur == goldfood_x && y_cur == goldfood_y){
+			P3++;
+			generatefood(1);
+			drawfood(1);
+		}
+		GLCD_delay(speed);
 	}
 }//end of function main
