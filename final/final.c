@@ -344,30 +344,42 @@ const unsigned char pacman_up[8] = {0x00, 0x78, 0x3c, 0x1e, 0x1e, 0x3c, 0x78, 0x
 //const unsigned char food[2] = {0xC0, 0xC0};
 //const unsigned char gold_food[4] = {0x60, 0xFF, 0xFF, 0x60};
 
-
-void generatefood(){
+// generate food positions, 0 for food, 1 for goldfood
+void generatefood(int foodmode){ 
 	do{
-		food_x = rand() % 8;//0~7
-		food_y = rand() % 16;//0~15
-	}while( x_cur != food_x && y_cur != food_y);
+		if (!foodmode) {
+			food_x = rand() % 8;//0~7
+			food_y = rand() % 16;//0~15
+		} else {
+			goldfood_x = rand() % 8;//0~7
+			goldfood_y = rand() % 16;//0~15
+		}
+	}while( goldfood_x != food_x && goldfood_y != food_y);
 }
 
-void drawfood(){
+void drawfood(int foodmode){
 	//int i;
 	int food = 0x18;
+	int gold_food = 0x3c;
+
+	// setup positions
+	int x = (foodmode) ? goldfood_x : food_x;
+	int y = (foodmode) ? goldfood_y : food_y;
 	
 	// set side and y address
-	if(food_y > 7) mode = 0;
-	else mode = 1;
+	mode = (food_y > 7) ? 0 : 1;
+
+	// set drawing position
 	Set_DisplayOn (mode); //right:left
-	Set_Xaddr(food_x);
-	Set_Yaddr (food_y*8+3);	
+	Set_Xaddr(x);
+	Set_Yaddr (y*8+ ((foodmode) ? 2 : 3));	
 	
-	// determine which level on current x page
-	/*for (i = 0; i <= food_x; i++) {
-		food *= 2;
-	}*/
+	// drawing food
 	Send_Data(food);
+	if (foodmode) {
+		Send_Data(gold_food);
+		Send_Data(gold_food);
+	}
 	Send_Data(food);
 
 }

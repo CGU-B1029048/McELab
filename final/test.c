@@ -1,7 +1,10 @@
 #include <stdio.h>
 
 int main() {
-    for (int i = 0; i < 64; i++) {
-        printf("%2d %2d %2d\n", i, i/8, i%8);
+
+    int goldfood[4] = {0b00011000, 0b00111100, 0b00111100, 0b00011000}; 
+
+    for (int i = 0; i < 4; i++) {
+        printf("%2x\n", goldfood[i]);
     }
 }
