@@ -33,11 +33,12 @@ void system_init_config (){
 	//setup the cross-bar and configure the I/O ports
 	XBR2 = 0xc0;
 	P2MDOUT = 0xff;
-	P0MDOUT = 0xff;
+	P6MDOUT = 0xff;
 	//P1 input
 	P1MDIN = 0xff;
 	//score
-	P1MDOUT = 0xff;
+	P3MDOUT = 0xff;
+
 }//end of function system_init_config
 
 
@@ -281,8 +282,7 @@ void Set_DisplayOn (int mode){
 }//end of function Set_DisplayOn
 
 
-void
-Set_DisplayOff ()
+void Set_DisplayOff ()
 {
 	char P2_cword, P4_cword;
 
@@ -346,8 +346,10 @@ const unsigned char pacman_up[8] = {0x00, 0x78, 0x3c, 0x1e, 0x1e, 0x3c, 0x78, 0x
 
 
 void generatefood(){
-  food_x = rand() % 8;//0~7
-  food_y = rand() % 16;//0~15
+	do{
+		food_x = rand() % 8;//0~7
+		food_y = rand() % 16;//0~15
+	}while( x_cur != food_x && y_cur != food_y);
 }
 
 void drawfood(){
@@ -355,7 +357,9 @@ void drawfood(){
 	int food = 0x18;
 	
 	// set side and y address
-	Set_DisplayOn ((mode = (food_y > 7))? 1 : 0); //right:left
+	if(food_y > 7) mode = 0;
+	else mode = 1;
+	Set_DisplayOn (mode); //right:left
 	Set_Xaddr(food_x);
 	Set_Yaddr (food_y*8+3);	
 	
@@ -480,6 +484,7 @@ int main (){
 
 	P1 = 0x00;
 	P3 = 0x00;//score
+	P6 = 0xff;
 	x_cur = 1;
 	y_cur = 6;
 	pac_status = 1;
@@ -494,10 +499,7 @@ int main (){
 			pac_status = 1;//right
 		} else if(P1 == 8){
 			pac_status = 2;//left
-		} /*else if(P1 == 16){
-			generatefood();
-			drawfood();
-		}*/
+		}
 		move_pacman(pac_status);
 		draw(x_cur, y_cur);	
 		if(x_cur == food_x && y_cur == food_y){
@@ -505,6 +507,6 @@ int main (){
 			generatefood();
 			drawfood();
 		}
+		GLCD_delay();
 	}
 }//end of function main
-
