@@ -3,6 +3,7 @@
 #include "LCD.h"
 #include <stdlib.h>
 int mode, x_cur, y_cur;
+int old_x, old_y;
 int ghost_x, ghost_y;
 int food_x, food_y;
 int goldfood_x, goldfood_y;
@@ -374,7 +375,11 @@ void draw(int x_in, int y_in) { //mode 0 right, 1 left
 	if(pac_status == 1 || pac_status == 2) pacman = pacman_right;
 	if(pac_status == 3 || pac_status == 4) pacman = pacman_up;
 	// begin erase
-	clean_pacman(x_in, y_in);
+	//clean_pacman(x_in, y_in);
+	Set_DisplayOn((old_y>7) ? 0: 1);
+	Set_Xaddr(old_x);
+	Set_Yaddr(old_y*8);
+	for(i = 0; i < 8; i++) Send_Data(0x00);
 
 	if(y_in > 7) mode = 0;
 	else mode = 1;
@@ -414,6 +419,8 @@ void draw_ghost() {
 }
 
 void move_pacman(int pac_status) {
+	old_x = x_cur;
+	old_y = y_cur;
 	if (pac_status == 1 && y_cur < 15) y_cur++;//right
 	else if (pac_status == 2 && y_cur > 0) y_cur--;//left
 	else if (pac_status == 3 && x_cur > 0) x_cur--;//up
