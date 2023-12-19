@@ -353,21 +353,35 @@ void draw(int x_in, int y_in) { //mode 0 right, 1 left
 
 }
 
-void draw_ghost() {
+void draw_ghost(int ghost_status) {
 	int i;
-	//clear ghost
-	mode = (old_ghost_y>7) ? 0: 1;
-	Set_DisplayOn(mode);
-	Set_Xaddr(old_ghost_x);
-	Set_Yaddr(old_ghost_y*8);
-	for(i = 0; i < 8; i++) Send_Data(0x00);
+	if(ghost_status == 0){
+		//clear ghost
+		mode = (old_ghost_y >7) ? 0: 1;
+		Set_DisplayOn(mode);
+		Set_Xaddr(old_ghost_x);
+		Set_Yaddr(old_ghost_y*8);
+		for(i = 0; i < 8; i++) Send_Data(0x00);
 
-	// Set page and address
-	mode = (ghost_y > 7) ? 0 : 1;
-	Set_DisplayOn(mode);
-	Set_Xaddr(ghost_x);
-	Set_Yaddr(ghost_y*8+1);
+		// Set page and address
+		mode = (ghost_y > 7) ? 0 : 1;
+		Set_DisplayOn(mode);
+		Set_Xaddr(ghost_x);
+		Set_Yaddr(ghost_y*8+1);
+	} else {
+		//clear ghost
+		mode = (old_ghost2_y >7) ? 0: 1;
+		Set_DisplayOn(mode);
+		Set_Xaddr(old_ghost2_x);
+		Set_Yaddr(old_ghost2_y*8);
+		for(i = 0; i < 8; i++) Send_Data(0x00);
 
+		// Set page and address
+		mode = (ghost2_y > 7) ? 0 : 1;
+		Set_DisplayOn(mode);
+		Set_Xaddr(ghost2_x);
+		Set_Yaddr(ghost2_y*8+1);		
+	}
 	// draw ghost
 	Send_Data(0x3c);
 	Send_Data(0x76);
@@ -409,7 +423,7 @@ void move_pacman(int pac_status, int ghost_status, int ghost2_status) {
  ******************************************************************************/
 
 int main (){
-	int ghost_status, ghost2_status;
+	int ghost_status, ghost2_status,i;
 	system_init_config ();
 	
 	GLCD_Reset ();
@@ -449,10 +463,10 @@ int main (){
 		move_pacman(pac_status, ghost_status, ghost2_status);
 		draw(x_cur, y_cur);
 		//more if-else loop can work /change mode to local variable?
-		draw_ghost();
-
+		draw_ghost(0);
+		draw_ghost(1);
 		// check if ghost eat food 
-		if(ghost_x == goldfood_x && ghost_y == goldfood_y){
+		if((ghost_x == goldfood_x && ghost_y == goldfood_y)||(ghost2_x == goldfood_x && ghost2_y == goldfood_y)){
 			generatefood();
 			drawfood();
 		}
@@ -463,11 +477,14 @@ int main (){
 			drawfood();
 		}
 		// check if ghost touch pacman, if so, die 
-		if (ghost_x == x_cur && ghost_y == y_cur) {
+		if ((ghost_x == x_cur && ghost_y == y_cur) || (ghost2_x == x_cur && ghost2_y == y_cur)) {
 			break;
 		}
+
 		GLCD_delay(speed);
 	}
-	while(1) P6 =~P6;
-	return 0;
+	while(1){
+		for(i = 0; i< 1000; i++);
+			P6 =~P6;
+	}
 }//end of function main
