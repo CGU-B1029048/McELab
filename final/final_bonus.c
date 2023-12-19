@@ -485,13 +485,19 @@ void draw_ghost() {
 	Send_Data(0x3c);
 }
 
-void move_pacman(int pac_status) {
+void move_pacman(int pac_status, int ghost_status) {
 	old_x = x_cur;
 	old_y = y_cur;
 	if (pac_status == 1 && y_cur < 15) y_cur++;//right
 	else if (pac_status == 2 && y_cur > 0) y_cur--;//left
 	else if (pac_status == 3 && x_cur > 0) x_cur--;//up
 	else if (pac_status == 4 && x_cur < 7) x_cur++;//down
+
+	if (ghost_status == 1 && ghost_y < 15) ghost_y++;//right
+	else if (ghost_status == 2 && ghost_y > 0) ghost_y--;//left
+	else if (ghost_status == 3 && ghost_x > 0) ghost_x--;//up
+	else if (ghost_status == 4 && ghost_x < 7) ghost_x++;//down
+
 	GLCD_delay(speed);
 }
 
@@ -510,6 +516,7 @@ int main (){
 	mode = 1;
 	GLCD_Clean();
 
+	int ghost_status;
 	P1 = 0x00;
 	P3 = 0x00;//score
 	P6 = 0xff;
@@ -518,6 +525,7 @@ int main (){
 	ghost_x = 0;
 	ghost_y = 0;
 	pac_status = 1;
+	ghost_status = 1;
 
 	generatefood();
 	drawfood();
@@ -532,7 +540,8 @@ int main (){
 		} else if(P1 == 8){
 			pac_status = 2;//left
 		}
-		move_pacman(pac_status);
+		ghost_status = rand() % 4 + 1;
+		move_pacman(pac_status, ghost_status);
 		draw(x_cur, y_cur);
 		//more if-else loop can work /change mode to local variable?
 		draw_ghost();
