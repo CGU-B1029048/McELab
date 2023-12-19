@@ -433,7 +433,7 @@ int main (){
 		} else if(P1 == 8){
 			pac_status = 2;//left
 		}
-		ghost_status = rand() % 4 + 1;
+		ghost_status = 1;//rand() % 4 + 1;
 		move_pacman(pac_status, ghost_status);
 		draw(x_cur, y_cur);
 		//more if-else loop can work /change mode to local variable?
@@ -443,14 +443,13 @@ int main (){
 		if(ghost_x == goldfood_x && ghost_y == goldfood_y){
 			generatefood();
 			drawfood();
-			pac_mode =1;
-
 		}
 		// check if pacman eat food
 		if(x_cur == goldfood_x && y_cur == goldfood_y){
 			P3++;
 			generatefood();
 			drawfood();
+			pac_mode =1;
 		}
 		// check if ghost touch pacman, if so, die 
 		if (ghost_x == x_cur && ghost_y == y_cur) {
@@ -458,12 +457,12 @@ int main (){
 				break;
 			} else {
 				pac_mode = 0;
-				ghost_x = 8;
+				ghost_x = 4;
 				ghost_y = 8;
 			}
 		}
+		P6 = pac_mode;
 		GLCD_delay(speed);
 	}
 	while(1) P6 =~P6;
-	return 0;
 }//end of function main
