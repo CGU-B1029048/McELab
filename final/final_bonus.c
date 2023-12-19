@@ -318,55 +318,6 @@ void drawfood(){
 	Send_Data(food);
 }
 
-void clean_pacman(int x_in, int y_in){
-	int i;
-	mode = (y_in > 7)? 0:1;
-	
-	if (pac_status == 1) {//right
-		Set_DisplayOn(mode);
-		Set_Xaddr(x_in);
-		if (y_in < 16) {
-			mode = (y_in < 9)? 1 :0;
-			Set_DisplayOn(mode);
-			Set_Yaddr((y_in - 1) * 8);
-			for (i = 0; i < 8; i++){
-				Send_Data(0x00);
-			}
-		}
-	}
-	if (pac_status == 2) {//left
-		Set_DisplayOn(mode);
-		Set_Xaddr(x_in);
-		if (y_in >= 0) {
-			mode = (y_in > 6) ? 0 : 1;
-			Set_DisplayOn(mode);
-			Set_Yaddr((y_in + 1) * 8);
-			for (i = 0; i < 8; i++){
-				Send_Data(0x00);
-			}
-		} 
-	}
-	if (pac_status == 3) {//up
-		if (x_in < 8) {
-			Set_DisplayOn(mode);
-			Set_Yaddr((y_in) * 8);
-			Set_Xaddr(x_in + 1);
-			for (i = 0; i < 8; i++){
-				Send_Data(0x00);
-			}
-		}
-	}
-	if (pac_status == 4) {//down
-		if (x_in > 0) {
-			Set_DisplayOn(mode);
-			Set_Yaddr((y_in) * 8);
-			Set_Xaddr(x_in - 1);
-			for (i = 0; i < 8; i++){
-				Send_Data(0x00);
-			}
-		}
-	}
-}
 
 void draw(int x_in, int y_in) { //mode 0 right, 1 left
 	const unsigned char* pacman;
@@ -375,8 +326,8 @@ void draw(int x_in, int y_in) { //mode 0 right, 1 left
 	if(pac_status == 1 || pac_status == 2) pacman = pacman_right;
 	if(pac_status == 3 || pac_status == 4) pacman = pacman_up;
 	// begin erase
-	//clean_pacman(x_in, y_in);
-	Set_DisplayOn((old_y>7) ? 0: 1);
+	mode = (old_y>7) ? 0: 1;
+	Set_DisplayOn(mode);
 	Set_Xaddr(old_x);
 	Set_Yaddr(old_y*8);
 	for(i = 0; i < 8; i++) Send_Data(0x00);
