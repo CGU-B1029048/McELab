@@ -1,6 +1,6 @@
 #include "C8051F040.h"
 #include "glcd.h"
-//#include "LCD.h"
+#include "LCD.h"
 #include <stdlib.h>
 int mode, x_cur, y_cur;
 int ghost_x, ghost_y;
@@ -126,21 +126,6 @@ char GLCD_ReadStatus (){
 }//end of function GLCD_ReadStatus
 
 
-char GLCD_ReadData (){
-	char P2_cword;
-	char dat;
-
-	if(mode == 0)
-		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
-	else
-		P2_cword = P2_CWORD_TEMPLATE_LEFT;
-	P2_cword = P2_cword | (P2_RS);
-	P2_cword = P2_cword | (P2_RW);
-	dat = GLCD_Read (P2_cword);
-
-	return dat;
-}//end of function GLCD_ReadData
-
 int GLCD_IsBusy (){
 	char status;
 
@@ -163,23 +148,6 @@ GLCD_IsReset ()
 	else
 		return 0;
 }//end of function GLCD_IsReset
-
-
-int GLCD_IsON (){
-	return !GLCD_IsOFF ();
-}//end of function GLCD_IsON
-
-
-int GLCD_IsOFF (){
-	char status;
-
-	status = GLCD_ReadStatus ();
-	if (status & P4_Status_On)
-		return 1;
-	else
-		return 0;
-}//end of function GLCD_IsOFF
-
 
 /*******************************************************************************
  *
@@ -282,30 +250,7 @@ void Set_DisplayOn (int mode){
 	GLCD_Write (P2_cword, P4_cword);
 }//end of function Set_DisplayOn
 
-
-void Set_DisplayOff ()
-{
-	char P2_cword, P4_cword;
-
-	///prepare control words
-	if(mode == 0)
-		P2_cword = P2_CWORD_TEMPLATE_RIGHT;
-	else
-		P2_cword = P2_CWORD_TEMPLATE_LEFT;
-	P2_cword = P2_cword & (~P2_RS);		//set RS bit
-	P2_cword = P2_cword & (~P2_RW);		//clear RW bit
-	P4_cword = P4_Set_Display_TMPL;
-	P4_cword = P4_cword & (~P4_Display_On);	//clear display ON bit
-
-	///flush out control signals
-	while (GLCD_IsBusy());
-	GLCD_Write (P2_cword, P4_cword);
-}//end of function Set_DisplayOff
-
-
-void
-GLCD_Reset ()
-{
+void GLCD_Reset (){
 	char P2_cword, P4_cword;
 
 	set_GLCD_WriteMode ();
@@ -346,55 +291,41 @@ const unsigned char pacman_up[8] = {0x00, 0x78, 0x3c, 0x1e, 0x1e, 0x3c, 0x78, 0x
 //const unsigned char gold_food[4] = {0x18, 0x3C, 0x3C, 0x18};
 
 
-void generatefood(int foodmode){
-	do{
-		if(!foodmode){//0
-			food_x = rand() % 8;//0~7
-			food_y = rand() % 16;//0~15
-		} else {//1
-			goldfood_x = rand() % 8;//0~7
-			goldfood_y = rand() % 16;//0~15
-		}
-	}while( goldfood_x != food_x && goldfood_y != food_y);
+void generatefood(){
+	goldfood_x = rand() % 8;//0~7
+	goldfood_y = rand() % 16;//0~15
 }
 
-void drawfood(int foodmode){
+void drawfood(){
 	int food = 0x18;
 	int gold_food = 0x3C;
 	int x ,y; 
-	x = (foodmode)?  goldfood_x:food_x;
-	y = (foodmode)?  goldfood_y: food_y;
+	x = goldfood_x;
+	y = goldfood_y;
 	// set side and y address
 	mode = (y > 7) ? 0 : 1;
 
 	// set drawing position
 	Set_DisplayOn (mode); //right:left
 	Set_Xaddr(x);
-	Set_Yaddr (y*8+ ((foodmode) ? 2 : 3));	
+	Set_Yaddr (y*8+2);	
 	
 	// drawing food
 	Send_Data(food);
-	if (foodmode) {
-		Send_Data(gold_food);
-		Send_Data(gold_food);
-	}
+	Send_Data(gold_food);
+	Send_Data(gold_food);
 	Send_Data(food);
 }
 
 void clean_pacman(int x_in, int y_in){
 	int i;
-	if(y_in > 7) mode = 0;//right
-	else mode = 1;//left
+	mode = (y_in > 7)? 0:1;
 	
 	if (pac_status == 1) {//right
+		Set_DisplayOn(mode);
 		Set_Xaddr(x_in);
 		if (y_in < 16) {
-			if (y_in <= 8) {
-				mode = 1;;
-				for (i = 0; i < 8; i++){
-					Send_Data(0x00);
-				}
-			}
+			mode = (y_in < 9)? 1 :0;
 			Set_DisplayOn(mode);
 			Set_Yaddr((y_in - 1) * 8);
 			for (i = 0; i < 8; i++){
@@ -403,11 +334,10 @@ void clean_pacman(int x_in, int y_in){
 		}
 	}
 	if (pac_status == 2) {//left
+		Set_DisplayOn(mode);
 		Set_Xaddr(x_in);
 		if (y_in >= 0) {
-			if (y_in >= 7) {
-				mode = 0;
-			}
+			mode = (y_in > 6) ? 0 : 1;
 			Set_DisplayOn(mode);
 			Set_Yaddr((y_in + 1) * 8);
 			for (i = 0; i < 8; i++){
@@ -476,10 +406,10 @@ void draw_ghost() {
 
 	// draw ghost
 	Send_Data(0x3c);
-	Send_Data(0x6e);
-	Send_Data(0x7c);
-	Send_Data(0x7c);
-	Send_Data(0x6e);
+	Send_Data(0x76);
+	Send_Data(0x3E);
+	Send_Data(0x3E);
+	Send_Data(0x76);
 	Send_Data(0x3c);
 }
 
@@ -498,6 +428,7 @@ void move_pacman(int pac_status) {
  ******************************************************************************/
 
 int main (){
+	int i;
 	system_init_config ();
 	
 	GLCD_Reset ();
@@ -511,13 +442,12 @@ int main (){
 	P6 = 0xff;
 	x_cur = 1;
 	y_cur = 6;
-	ghost_x = 6;
-	ghost_y = 8;
+	ghost_x = 0;
+	ghost_y = 0;
 	pac_status = 1;
-	generatefood(0);
-	drawfood(0);
-	generatefood(1);
-	drawfood(1);
+
+	generatefood();
+	drawfood();
 	speed = 500;
 	while(1){
 		if (P1 == 1){//up
@@ -528,32 +458,22 @@ int main (){
 			pac_status = 1;//right
 		} else if(P1 == 8){
 			pac_status = 2;//left
-		} else if(P1 == 16){
-			speed = (speed == 500)? 300: 500;
 		}
 		move_pacman(pac_status);
 		draw(x_cur, y_cur);
+		//more if-else loop can work /change mode to local variable?
 		draw_ghost();
 
 		// check if ghost eat food 
-		if(ghost_x == food_x && ghost_y == food_y){
-			generatefood(0);
-			drawfood(0);
-		}
 		if(ghost_x == goldfood_x && ghost_y == goldfood_y){
-			generatefood(1);
-			drawfood(1);
+			generatefood();
+			drawfood();
 		}
 		// check if pacman eat food
-		if(x_cur == food_x && y_cur == food_y){
-			P3++;
-			generatefood(0);
-			drawfood(0);
-		}
 		if(x_cur == goldfood_x && y_cur == goldfood_y){
 			P3++;
-			generatefood(1);
-			drawfood(1);
+			generatefood();
+			drawfood();
 		}
 		// check if ghost touch pacman, if so, die 
 		if (ghost_x == x_cur && ghost_y == y_cur) {
@@ -565,6 +485,6 @@ int main (){
 	P3 = 0xff;
 	while (1) {
 		P3 = ~P3;
-		for (int i = 0; i < 100; i++) ;
+		for (i = 0; i < 10000; i++) ;
 	}
 }//end of function main
