@@ -400,7 +400,7 @@ void move_pacman(int pac_status, int ghost_status) {
  ******************************************************************************/
 
 int main (){
-	int ghost_status;
+	int ghost_status, pac_mode;
 	system_init_config ();
 	
 	GLCD_Reset ();
@@ -414,6 +414,7 @@ int main (){
 	P6 = 0xff;
 	x_cur = 1;
 	y_cur = 6;
+	pac_mode = 0;
 	ghost_x = 0;
 	ghost_y = 0;
 	pac_status = 1;
@@ -442,6 +443,8 @@ int main (){
 		if(ghost_x == goldfood_x && ghost_y == goldfood_y){
 			generatefood();
 			drawfood();
+			pac_mode =1;
+
 		}
 		// check if pacman eat food
 		if(x_cur == goldfood_x && y_cur == goldfood_y){
@@ -451,7 +454,13 @@ int main (){
 		}
 		// check if ghost touch pacman, if so, die 
 		if (ghost_x == x_cur && ghost_y == y_cur) {
-			break;
+			if (pac_mode == 0) {
+				break;
+			} else {
+				pac_mode = 0;
+				ghost_x = 8;
+				ghost_y = 8;
+			}
 		}
 		GLCD_delay(speed);
 	}
