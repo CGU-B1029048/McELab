@@ -364,7 +364,7 @@ void draw_wall() {
 	mode = (wall_y > 7) ? 0 : 1;
 	Set_DisplayOn(mode);
 	Set_Xaddr(wall_x);
-	Set_Yaddr(wall_y*8+1);
+	Set_Yaddr(wall_y*8);
 
 	// draw ghost
 	for (i = 0; i < 8; i++) {
@@ -375,8 +375,6 @@ void draw_wall() {
 void move_pacman(int pac_status) {
 	old_x = x_cur;
 	old_y = y_cur;
-	old_wall_x = wall_x;
-	old_wall_y = wall_y;
 	if (pac_status == 1 && y_cur < 15) y_cur++;//right
 	else if (pac_status == 2 && y_cur > 0) y_cur--;//left
 	else if (pac_status == 3 && x_cur > 0) x_cur--;//up
@@ -412,6 +410,8 @@ int main (){
 	y_cur = 6;
 	wall_x = rand() % 8;
 	wall_y = rand() % 16;
+	old_wall_x = wall_x;
+	old_wall_y = wall_y;
 	pac_status = 1;
 
 	generatefood();
@@ -427,23 +427,28 @@ int main (){
 		} else if(P1 == 8){
 			pac_status = 2;//left
 		} else if (P1 == 16) {
+			old_wall_x = wall_x;
+			old_wall_y = wall_y;
 			wall_x = rand() % 8;
 			wall_y = rand() % 16;
 		}
 		move_pacman(pac_status);
 		
 		// check if ghost touch pacman, if so, die 
-		if (wall_x == x_cur && wall_y == y_cur) {
-			switch (pac_status) {
+		switch (pac_status) {
 			case 1:
-				x_cur--;
+				if(wall_x == (x_cur) && wall_y == (y_cur)){
+					y_cur--;
+				}
 			case 2:
-				x_cur++;
+				if(wall_x == (x_cur) && wall_y == (y_cur))
+					y_cur++;
 			case 3:
-				y_cur--;
+				if(wall_x == (x_cur) && wall_y == (y_cur))
+					x_cur++;
 			case 4:
-				y_cur++;
-			}
+				if(wall_x == (x_cur) && wall_y == (y_cur))
+					x_cur--;
 		}
 
 		draw(x_cur, y_cur);
